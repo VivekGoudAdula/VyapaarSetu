@@ -80,3 +80,4 @@ class InventoryLedgerListResponse(BaseModel):
     page: int
     limit: int
     pages: int
+

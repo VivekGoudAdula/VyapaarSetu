@@ -22,6 +22,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("vyapaar_setu.api")
 
+# Suppress noisy pymongo wire/heartbeat logs in terminal
+logging.getLogger("pymongo").setLevel(logging.WARNING)
+logging.getLogger("pymongo.topology").setLevel(logging.WARNING)
+logging.getLogger("pymongo.connection").setLevel(logging.WARNING)
+logging.getLogger("pymongo.server").setLevel(logging.WARNING)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

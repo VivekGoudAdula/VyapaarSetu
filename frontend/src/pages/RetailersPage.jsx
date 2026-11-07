@@ -869,3 +869,4 @@ export function RetailersPage() {
     </div>
   );
 }
+

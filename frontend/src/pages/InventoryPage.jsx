@@ -894,3 +894,4 @@ export function InventoryPage() {
     </div>
   );
 }
+

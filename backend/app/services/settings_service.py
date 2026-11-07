@@ -101,3 +101,4 @@ class SettingsService:
         )
 
         return await self.get_settings(org_id)
+

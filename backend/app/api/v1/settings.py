@@ -42,3 +42,4 @@ async def update_settings(
         org_id=tenant.organization_id,
         payload=payload
     )
+

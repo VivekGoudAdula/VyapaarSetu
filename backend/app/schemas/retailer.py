@@ -135,3 +135,4 @@ class RetailerListResponse(BaseModel):
     limit: int
     pages: int
     total_credit_allocated: float
+

@@ -223,3 +223,4 @@ class RetailerService:
         if res.matched_count == 0:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Retailer not found.")
         return {"status": "success", "message": "Retailer deactivated."}
+

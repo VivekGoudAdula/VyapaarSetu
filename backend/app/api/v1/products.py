@@ -121,3 +121,4 @@ async def delete_product(
         org_id=tenant.organization_id,
         product_id=ObjectId(product_id)
     )
+

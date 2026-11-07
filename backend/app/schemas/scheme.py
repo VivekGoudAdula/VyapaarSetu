@@ -139,3 +139,4 @@ class SchemeCalculationResponse(BaseModel):
     total_savings: float
     final_total: float
     free_goods_summary: List[Dict[str, Any]] = Field(default_factory=list)
+

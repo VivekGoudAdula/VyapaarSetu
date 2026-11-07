@@ -113,3 +113,4 @@ async def delete_retailer(
         org_id=tenant.organization_id,
         retailer_id=ObjectId(retailer_id)
     )
+

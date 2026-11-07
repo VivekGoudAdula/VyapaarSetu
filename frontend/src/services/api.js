@@ -4,7 +4,7 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_TIMEOUT_MS = 45000;
 
 // Short-lived access token kept strictly in frontend memory (never stored in localStorage)
 let inMemoryAccessToken = null;

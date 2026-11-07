@@ -82,9 +82,19 @@ export function LoginPage() {
         <Card className="border-slate-200/90 shadow-card bg-white">
           <CardContent className="p-6 sm:p-8">
             {errorMessage && (
-              <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                <span className="leading-relaxed">{errorMessage}</span>
+              <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start justify-between gap-2 animate-in fade-in">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                  <span className="leading-relaxed">{errorMessage}</span>
+                </div>
+                {errorMessage.toLowerCase().includes('register first') && (
+                  <Link
+                    to="/register"
+                    className="shrink-0 font-bold text-emerald-700 hover:text-emerald-800 underline whitespace-nowrap"
+                  >
+                    Register now →
+                  </Link>
+                )}
               </div>
             )}
 

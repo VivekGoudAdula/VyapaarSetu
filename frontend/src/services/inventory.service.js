@@ -58,3 +58,4 @@ export const inventoryService = {
     return apiRequest(`/api/v1/inventory/${productId}/ledger?${params.toString()}`);
   },
 };
+

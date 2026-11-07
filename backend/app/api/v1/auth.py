@@ -95,7 +95,7 @@ async def register_organization(
         logger.warning(f"Registration rejected: account with email '{normalized_email}' already exists.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this email address already exists. Please sign in."
+            detail="An account with this email address already exists. Please sign in instead."
         )
 
     now = datetime.now(timezone.utc)
@@ -229,12 +229,18 @@ async def login(
     normalized_email = data.email.strip().lower()
     user = await db.users.find_one({"email_normalized": normalized_email, "is_active": True})
 
-    if not user or not verify_password(data.password, user["password_hash"]):
+    if not user:
         login_limiter.record_attempt(rate_limit_key)
-        # Generic error message — prevents email enumeration
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email address or password."
+            detail="No account found with this email. Please register first."
+        )
+
+    if not verify_password(data.password, user["password_hash"]):
+        login_limiter.record_attempt(rate_limit_key)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password. Please verify your password and try again."
         )
 
     # Login succeeded: clear rate limiter counter

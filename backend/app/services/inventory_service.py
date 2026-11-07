@@ -332,3 +332,4 @@ class InventoryService:
             limit=limit,
             pages=pages
         )
+

@@ -65,3 +65,4 @@ class BusinessSettingsResponse(BaseModel):
     supported_languages: List[str] = Field(default_factory=lambda: ["hi-IN", "te-IN", "en-IN"])
     operating_hours: OperatingHoursConfig = Field(default_factory=OperatingHoursConfig)
     delivery_areas: DeliveryAreaConfig = Field(default_factory=DeliveryAreaConfig)
+

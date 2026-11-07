@@ -125,3 +125,4 @@ class ProductListResponse(BaseModel):
     limit: int
     pages: int
     categories: List[str] = Field(default_factory=list)
+
