@@ -82,6 +82,7 @@ async def register_organization(
     # 1. Validate password strength
     is_strong, pwd_err = validate_password_strength(data.password)
     if not is_strong:
+        logger.warning(f"Registration rejected for email '{data.email}': {pwd_err}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=pwd_err
@@ -91,6 +92,7 @@ async def register_organization(
     normalized_email = data.email.strip().lower()
     existing_user = await db.users.find_one({"email_normalized": normalized_email})
     if existing_user:
+        logger.warning(f"Registration rejected: account with email '{normalized_email}' already exists.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="An account with this email address already exists. Please sign in."

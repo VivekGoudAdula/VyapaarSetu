@@ -63,8 +63,18 @@ export async function apiRequest(endpoint, options = {}) {
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-      // FastAPI standardized error responses expose error descriptions under 'detail'
-      const errorMessage = (typeof data === 'object' && (data?.detail || data?.message)) || `HTTP error ${response.status}`;
+      let errorMessage = `HTTP error ${response.status}`;
+      if (typeof data === 'object' && data !== null) {
+        if (typeof data.detail === 'string') {
+          errorMessage = data.detail;
+        } else if (Array.isArray(data.detail)) {
+          errorMessage = data.detail.map((err) => err.msg || JSON.stringify(err)).join('. ');
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+      } else if (typeof data === 'string' && data.length > 0) {
+        errorMessage = data;
+      }
       throw new ApiError(errorMessage, response.status, data);
     }
 
