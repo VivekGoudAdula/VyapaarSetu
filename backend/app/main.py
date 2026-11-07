@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
 
     # 3. Graceful shutdown
     logger.info(f"Shutting down {settings.APP_NAME}...")
-    mongo_manager.close()
+    await mongo_manager.close()
     logger.info("Shutdown complete.")
 
 

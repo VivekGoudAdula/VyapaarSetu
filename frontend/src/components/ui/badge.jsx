@@ -2,12 +2,13 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 const BADGE_VARIANTS = {
-  default: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  warning: 'bg-amber-50 text-amber-800 border-amber-200',
-  destructive: 'bg-red-50 text-red-800 border-red-200',
-  info: 'bg-blue-50 text-blue-800 border-blue-200',
+  default: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+  success: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+  warning: 'bg-amber-50 text-amber-800 border-amber-200/80',
+  destructive: 'bg-red-50 text-red-800 border-red-200/80',
+  info: 'bg-blue-50 text-blue-800 border-blue-200/80',
   neutral: 'bg-slate-100 text-slate-700 border-slate-200',
+  subtle: 'bg-slate-50 text-slate-600 border-slate-200/60',
 };
 
 const DOT_COLORS = {
@@ -17,17 +18,11 @@ const DOT_COLORS = {
   destructive: 'bg-red-500',
   info: 'bg-blue-500',
   neutral: 'bg-slate-400',
+  subtle: 'bg-slate-400',
 };
 
 /**
- * Reusable Badge component for status pills and metadata chips.
- * 
- * @param {Object} props
- * @param {'default'|'success'|'warning'|'destructive'|'info'|'neutral'} [props.variant='default']
- * @param {boolean} [props.showDot=false] - Whether to show a circular status dot
- * @param {'sm'|'default'} [props.size='default']
- * @param {string} [props.className]
- * @param {React.ReactNode} props.children
+ * Reusable Badge primitive for status indicators and metadata tags.
  */
 export function Badge({
   variant = 'default',
@@ -61,4 +56,3 @@ export function Badge({
     </span>
   );
 }
-

@@ -58,7 +58,7 @@
   - Implemented real-time `LiveStatusBeacon` monitoring `/health` telemetry without fake states.
   - Built honest `OverviewPage` with hero welcome, 4-step voice commerce pipeline, and roadmap journey.
   - Initialized `backend/` using Python 3.11+ and FastAPI.
-  - Implemented async MongoDB client pool via Motor with non-blocking TCP socket probe.
+  - Implemented async MongoDB client pool via official native PyMongo Async API (`AsyncMongoClient`) with dynamic replica set discovery and admin ping.
   - Implemented `/health`, `/api/v1/health`, and `/api/v1/ping` endpoints returning HTTP 200 (connected) or HTTP 503 (degraded).
   - Configured strict CORS for Vite local origin and established centralized frontend API client.
 - **Dependencies:** Phase 0 complete.

@@ -14,7 +14,7 @@ Every engineer and AI agent contributing to this repository must adhere strictly
 - **Frontend Routing:** React Router DOM (v6+).
 - **Backend Framework:** Python (3.11+) with FastAPI.
 - **Data Validation:** Pydantic (v2) for all request and response contracts.
-- **Database:** MongoDB (v6+) via Motor (async driver) and PyMongo.
+- **Database:** MongoDB (v6+) via official PyMongo Async API (`pymongo.AsyncMongoClient` v4.9+).
 - **Real-Time Communication:** Native WebSockets via FastAPI.
 - **Charts & Data Viz:** Recharts.
 

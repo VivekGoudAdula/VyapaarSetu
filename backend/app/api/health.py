@@ -13,6 +13,8 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     database: str
+    database_name: Optional[str] = None
+    driver: Optional[str] = None
     error: Optional[str] = None
     timestamp: str
 
@@ -33,6 +35,8 @@ async def check_health(response: Response):
             service="vyapaar-setu-api",
             version=settings.APP_VERSION,
             database="connected",
+            database_name=mongo_manager.db_name,
+            driver="PyMongo Async API (v4.9+)",
             error=None,
             timestamp=now_iso,
         )
@@ -44,6 +48,8 @@ async def check_health(response: Response):
         service="vyapaar-setu-api",
         version=settings.APP_VERSION,
         database="disconnected",
+        database_name=mongo_manager.db_name,
+        driver="PyMongo Async API (v4.9+)",
         error=db_error or "Unable to reach MongoDB instance",
         timestamp=now_iso,
     )
@@ -53,4 +59,3 @@ async def check_health(response: Response):
 async def ping_liveness():
     """Lightweight liveness probe for load balancers."""
     return {"ping": "pong", "service": "vyapaar-setu-api"}
-

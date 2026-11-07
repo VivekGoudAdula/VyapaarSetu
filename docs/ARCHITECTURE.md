@@ -144,7 +144,7 @@ Vyapaar-Setu/
 │   │   │   ├── exceptions.py               # Standardized application exception classes
 │   │   │   └── logging.py                  # Structured JSON logger configuration
 │   │   ├── db/                             # Database connectivity and session lifecycle
-│   │   │   ├── mongo.py                    # Motor client connection pool & lifecycle
+│   │   │   ├── mongodb.py                  # PyMongo Async client connection pool & lifecycle (PyMongo 4.9+ native AsyncMongoClient)
 │   │   │   └── indexes.py                  # Database index creation script
 │   │   ├── middleware/                     # Request lifecycle middleware
 │   │   │   ├── tenant_context.py           # Organization isolation & tenant extraction

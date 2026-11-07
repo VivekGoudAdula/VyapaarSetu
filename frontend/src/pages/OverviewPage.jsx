@@ -1,179 +1,184 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 import {
   PhoneCall,
   Bot,
   CheckCircle2,
-  LayoutDashboard,
-  ArrowRight,
-  Sparkles,
+  PackageCheck,
   Building2,
   Package,
   Phone,
   Mic,
-  Boxes,
-  Search,
-  Check
+  ArrowRight,
+  Database,
+  Cpu,
+  Layers,
+  Sparkles,
+  ShoppingBag,
+  Clock,
+  ShieldCheck,
+  ExternalLink
 } from 'lucide-react';
 
 const WORKFLOW_STEPS = [
   {
     step: '01',
     title: 'Retailer Inbound Call',
-    desc: 'Retailer dials your dedicated Vobiz business phone number from any standard mobile phone.',
+    desc: 'A kirana store owner calls your dedicated Vobiz business phone number from any mobile phone.',
     icon: PhoneCall,
-    tag: 'Vobiz Telephony',
+    detail: 'E.g. Begum Bazaar or mandi retailer dialing during morning order rush.',
+    pill: 'Inbound Telephony',
   },
   {
     step: '02',
-    title: 'Multilingual AI Dialogue',
-    desc: 'Voice agent converses naturally in Hindi, Telugu, or English, checking real stock and wholesale rates.',
+    title: 'Natural Trade Dialogue',
+    desc: 'The AI answers within 2 rings in Hindi, Telugu, or English, understanding accents and trade terms.',
     icon: Bot,
-    tag: 'Gnani + Groq',
+    detail: 'Understands units: cartons, boris, petis, packets, and bulk variants.',
+    pill: 'Gnani Speech AI',
   },
   {
     step: '03',
-    title: 'Verbal Confirmation',
-    desc: 'Order items, quantities, and schemes are summarized with mandatory spoken confirmation.',
-    icon: CheckCircle2,
-    tag: 'Deterministic Logic',
+    title: 'Live Catalog & Price Check',
+    desc: 'Stock quantities, wholesale rates, and active trade schemes are checked against live distributor data.',
+    icon: PackageCheck,
+    detail: 'Deterministic calculation: checks MOQ, volume slabs, and batch discounts.',
+    pill: 'MongoDB Atlas',
   },
   {
     step: '04',
-    title: 'Distributor Dashboard Sync',
-    desc: 'Confirmed order lands instantly on your operational desk via WebSockets with an audible chime.',
-    icon: LayoutDashboard,
-    tag: 'Real-time WebSocket',
+    title: 'Order Capture & Dashboard Sync',
+    desc: 'The AI summarizes items, obtains verbal confirmation, and pushes the order straight to your desk.',
+    icon: ShoppingBag,
+    detail: 'Instant WebSocket alert with audio playback and turn-by-turn transcript.',
+    pill: 'Live Fulfillment',
   },
 ];
 
 const ONBOARDING_ROADMAP = [
   {
-    number: 1,
-    title: 'Register Distributor Organization',
-    description: 'Set up your business identity, legal GSTIN, and staff permissions.',
+    number: '01',
+    title: 'Create Your Business Profile',
+    desc: 'Register your distributor organization, Mandi trade name, GSTIN details, and staff member roles.',
     phase: 'Phase 2',
-    status: 'Upcoming',
+    status: 'Upcoming Milestone',
     icon: Building2,
   },
   {
-    number: 2,
-    title: 'Configure Product Catalogue & Schemes',
-    description: 'Define wholesale case rates, packaging units (bori, peti, carton), and trade promotions.',
+    number: '02',
+    title: 'Add Products, Pricing & Inventory',
+    desc: 'Configure SKU codes, base wholesale rates, packaging multipliers (cartons/boris), and active schemes.',
     phase: 'Phase 3',
-    status: 'Upcoming',
+    status: 'Upcoming Milestone',
     icon: Package,
   },
   {
-    number: 3,
+    number: '03',
     title: 'Connect Business Telephony',
-    description: 'Assign a dedicated virtual business phone number powered by Vobiz.',
+    desc: 'Assign an official virtual business phone number powered by Vobiz for incoming retailer calls.',
     phase: 'Phase 4',
-    status: 'Upcoming',
+    status: 'Upcoming Milestone',
     icon: Phone,
   },
   {
-    number: 4,
-    title: 'Activate Multilingual Voice Agent',
-    description: 'Deploy the AI sales employee with Gnani speech models and live catalogue tools.',
+    number: '04',
+    title: 'Start Receiving AI-Powered Orders',
+    desc: 'Deploy the multilingual voice engine to answer inquiries, verify stock, and capture confirmed orders.',
     phase: 'Phase 5 & 6',
-    status: 'Upcoming',
+    status: 'Upcoming Milestone',
     icon: Mic,
   },
 ];
 
 /**
- * Overview Page: The honest, polished workspace introduction for Phase 1.
- * Showcases the design system, brand ethos, and intended architecture without fake business metrics.
+ * Redesigned Enterprise Overview Page for Vyapaar सेतु.
+ * Strictly light-mode, spacious, communicative, and aligned with Indian wholesale trade reality.
  */
 export function OverviewPage() {
-  const [demoInput, setDemoInput] = useState('');
-  const [selectedVariant, setSelectedVariant] = useState('primary');
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleCopyTagline = () => {
-    navigator.clipboard.writeText('Baatcheet se business tak.');
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
-
   return (
-    <div className="space-y-8 pb-12">
-      {/* 1. Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-900 text-white p-6 sm:p-8 md:p-10 shadow-elevated">
-        {/* Subtle background decoration */}
-        <div className="absolute right-0 top-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute left-1/3 bottom-0 -mb-20 w-80 h-80 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-
+    <div className="space-y-10 pb-12">
+      {/* 1. Welcome Hero Section (Pure Light Theme, Warm Elevation) */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 md:p-10 shadow-card relative overflow-hidden">
+        {/* Subtle decorative background gradient */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-emerald-50/70 via-teal-50/30 to-transparent rounded-full -mr-20 -mt-20 pointer-events-none" />
+        
         <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold select-none backdrop-blur-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Phase 1 Active • Foundation & Design System</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="success" size="sm" showDot>
+              Phase 1 Foundation Active
+            </Badge>
+            <span className="text-slate-300">•</span>
+            <span className="text-xs font-medium text-slate-500 font-mono">
+              MongoDB Atlas Live
+            </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-            Welcome to <span className="text-white">Vyapaar</span>{' '}
-            <span className="text-emerald-400 font-semibold">सेतु</span>
-          </h2>
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+              Welcome to <span className="text-slate-900">Vyapaar</span>{' '}
+              <span className="text-emerald-600 font-semibold">सेतु</span>
+            </h2>
+            <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed">
+              Turn everyday phone conversations into organised wholesale orders.
+            </p>
+          </div>
 
-          <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-2xl">
-            Your business operations, connected through conversations. Vyapaar सेतु provides wholesale distributors with an always-available AI sales employee connected to your dedicated business phone line.
+          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-2xl">
+            Vyapaar सेतु gives wholesale distributors and FMCG super-stockists a dedicated, always-on AI sales employee. Retailers call your business number, ask about rates and stock in Hindi, Telugu, or English, and place confirmed orders directly into your fulfillment queue.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleCopyTagline}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-xs text-slate-200 transition-colors"
-            >
-              <span className="italic font-medium">Official Tagline:</span>
-              <span className="font-semibold text-emerald-300">Baatcheet se business tak.</span>
-              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : null}
-            </button>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs font-medium text-slate-700">
+              <span className="text-slate-400 font-normal">Official Tagline:</span>
+              <span className="font-semibold text-emerald-700">Baatcheet se business tak.</span>
+            </div>
 
-            <span className="text-xs text-slate-400">
-              • Built for FMCG, staples, and Indian wholesale trade
-            </span>
+            <div className="inline-flex items-center gap-1.5 text-xs text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Multi-tenant SaaS Architecture</span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 2. Product Value Workflow: Spoken Conversation to Confirmed Order */}
+      {/* 2. Core Voice-to-Order Pipeline (The Heart of the Product) */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
-              The Voice Commerce Pipeline
+            <h3 className="text-lg font-semibold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>The Voice Commerce Workflow</span>
+              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                Core Engine
+              </span>
             </h3>
             <p className="text-xs sm:text-sm text-slate-500">
-              The heart of Vyapaar सेतु: converting unstructured phone dialogue into structured, validated purchase orders.
+              How spoken trade calls are processed into validated, binding purchase orders.
             </p>
           </div>
-          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
-            Core Golden Workflow
-          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {WORKFLOW_STEPS.map((step) => {
             const Icon = step.icon;
             return (
-              <Card key={step.step} className="relative hover:border-emerald-200 transition-colors">
-                <CardContent className="p-5 space-y-3">
+              <div
+                key={step.step}
+                className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-card hover:border-emerald-200/80 transition-all flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
                       STEP {step.step}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium">
-                      {step.tag}
+                      {step.pill}
                     </span>
                   </div>
 
-                  <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700">
-                    <Icon className="w-5 h-5 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center text-emerald-700 shadow-subtle">
+                    <Icon className="w-5 h-5" />
                   </div>
 
                   <div className="space-y-1">
@@ -184,149 +189,173 @@ export function OverviewPage() {
                       {step.desc}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-400 leading-snug">
+                  {step.detail}
+                </div>
+              </div>
             );
           })}
         </div>
       </section>
 
-      {/* 3. Getting Started Roadmap (Upcoming Business Journey) */}
+      {/* 3. Product Setup Journey (Getting Started Roadmap) */}
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
-            Distributor Onboarding Journey
+            Wholesale Onboarding Journey
           </h3>
           <p className="text-xs sm:text-sm text-slate-500">
-            Upcoming implementation milestones required to take your wholesale business live on voice commerce.
+            The 4-step sequence required to take your wholesale business live on AI voice commerce.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {ONBOARDING_ROADMAP.map((item) => {
             const Icon = item.icon;
             return (
-              <Card key={item.number} className="border-slate-200/90">
-                <CardContent className="p-5 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+              <div
+                key={item.number}
+                className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-card relative flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-400">
+                      {item.number}
+                    </span>
+                    <Badge variant="subtle" size="sm">
+                      {item.phase}
+                    </Badge>
+                  </div>
+
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-700 shadow-subtle">
                     <Icon className="w-5 h-5 text-slate-700" />
                   </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-sm font-semibold text-slate-900 truncate">
-                        {item.number}. {item.title}
-                      </h4>
-                      <Badge variant="neutral" size="sm">
-                        {item.phase}
-                      </Badge>
-                    </div>
+
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-slate-900 tracking-tight">
+                      {item.title}
+                    </h4>
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      {item.description}
+                      {item.desc}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="font-medium text-slate-500">{item.status}</span>
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+              </div>
             );
           })}
         </div>
       </section>
 
-      {/* 4. Live Orders Desk Status (Honest Empty State without Mock Data) */}
-      <section className="space-y-4">
+      {/* 4. Real Indian Wholesale Trade Simulation (Visual Walkthrough) */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-card space-y-6">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
-            Orders Desk Status
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Real-time feed for incoming voice phone orders.
-          </p>
-        </div>
-
-        <EmptyState
-          icon={<Boxes className="w-6 h-6 text-slate-400" />}
-          title="No Active Orders (Awaiting Phase 2 & 7)"
-          description="Business records, live telephone calls, and incoming purchase orders will populate here once distributor onboarding and telephony pipelines are activated."
-          action={
-            <div className="inline-flex items-center gap-2 text-xs text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>Real data policy: zero mock records generated</span>
-            </div>
-          }
-        />
-      </section>
-
-      {/* 5. Design System & UI Primitives Sandbox */}
-      <section className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
-            Design System Verification
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Interactive preview of reusable UI primitives built for the $10,000 SaaS visual standard.
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+              Conversational Order Preview
+            </h3>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Visual breakdown of how a phone enquiry converts to a validated order item in the warehouse.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Button Variants Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Button Primitives</CardTitle>
-              <CardDescription>
-                Accessible buttons supporting primary, secondary, outline, destructive, and loading states.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <Button variant="primary">Primary Action</Button>
-                <Button variant="secondary">Secondary</Button>
-                <Button variant="outline">Outline</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button variant="destructive">Destructive</Button>
-              </div>
+          {/* Spoken Retailer Dialogue Panel */}
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                <PhoneCall className="w-3.5 h-3.5 text-emerald-600" /> Inbound Retailer Call
+              </span>
+              <span className="font-mono text-[11px] text-slate-400">Begum Bazaar, Hyderabad</span>
+            </div>
 
-              <div className="pt-2 flex flex-wrap items-center gap-2.5">
-                <Button size="sm" variant="primary">Small</Button>
-                <Button size="default" variant="primary">Default</Button>
-                <Button size="lg" variant="primary">Large</Button>
-                <Button variant="primary" isLoading>Loading State</Button>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="p-3 bg-white rounded-lg border border-slate-200/60 shadow-subtle space-y-1.5">
+              <p className="text-xs font-semibold text-slate-900">
+                Retailer (Sri Balaji Kirana):
+              </p>
+              <p className="text-xs text-slate-600 italic leading-relaxed">
+                "भैया फॉर्च्यून सनफ्लावर १ लीटर पाउच का ५ कार्टन चाहिए और पार्ले-जी १० रुपये वाला २ बोरी। रेट क्या चल रहा है?"
+              </p>
+            </div>
 
-          {/* Badges & Inputs Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Badges & Input Controls</CardTitle>
-              <CardDescription>
-                High-contrast form controls and status indicators with semantic states.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Badges Row */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="success" showDot>Accepted</Badge>
-                <Badge variant="warning" showDot>Pending Review</Badge>
-                <Badge variant="info" showDot>In Transit</Badge>
-                <Badge variant="destructive" showDot>Rejected</Badge>
-                <Badge variant="neutral">Draft</Badge>
-              </div>
+            <div className="p-3 bg-emerald-50/80 rounded-lg border border-emerald-200/60 shadow-subtle space-y-1.5">
+              <p className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
+                <Bot className="w-3.5 h-3.5 text-emerald-600" /> AI Sales Employee:
+              </p>
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                "फॉर्च्यून सनफ्लावर १ लीटर के ५ कार्टन उपलब्ध हैं, रेट ₹१,४२० प्रति कार्टन। और पार्ले-जी २ बोरी का रेट ₹९६० प्रति बोरी। कुल बिल ₹९,०२० बनता है। क्या आर्डर कन्फर्म कर दूँ?"
+              </p>
+            </div>
+          </div>
 
-              {/* Input Demo */}
-              <div className="pt-1">
-                <Input
-                  label="Sample Search Control"
-                  placeholder="Search catalogue by SKU or product name..."
-                  value={demoInput}
-                  onChange={(e) => setDemoInput(e.target.value)}
-                  leftIcon={<Search className="w-4 h-4" />}
-                  helperText="Interactive component demonstration with focus rings."
-                />
+          {/* Structured Order Document Preview */}
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                <PackageCheck className="w-3.5 h-3.5 text-emerald-600" /> Structured Order Record
+              </span>
+              <Badge variant="success" size="sm">
+                Validated
+              </Badge>
+            </div>
+
+            <div className="bg-white rounded-lg border border-slate-200/60 p-3 shadow-subtle space-y-2 text-xs">
+              <div className="flex justify-between pb-2 border-b border-slate-100">
+                <span className="text-slate-500">Retailer Store:</span>
+                <span className="font-medium text-slate-900">Sri Balaji Kirana & General Store</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Fortune Sunflower Oil 1L (12 pcs/carton):</span>
+                <span className="font-mono font-medium text-slate-900">5 Cartons • ₹7,100</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Parle-G Glucose Biscuit 100g (24 pcs/bori):</span>
+                <span className="font-mono font-medium text-slate-900">2 Boris • ₹1,920</span>
+              </div>
+              <div className="pt-2 border-t border-slate-100 flex justify-between font-semibold text-slate-900">
+                <span>Calculated Order Subtotal:</span>
+                <span className="font-mono text-emerald-700">₹9,020.00</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400">
+              * Order will trigger instant WebSocket push to the orders desk upon verbal confirmation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Honest Infrastructure Health & Telemetry Card */}
+      <section className="bg-slate-50/80 rounded-xl border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 shadow-subtle shrink-0">
+            <Database className="w-4 h-4" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-slate-900 tracking-tight">
+              Verified MongoDB Atlas Infrastructure
+            </h4>
+            <p className="text-xs text-slate-500">
+              Native PyMongo Async driver • Multi-region Atlas cluster • Zero mock databases
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Atlas Operational
+          </span>
         </div>
       </section>
     </div>
   );
 }
-

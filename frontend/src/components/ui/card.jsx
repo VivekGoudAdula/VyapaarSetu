@@ -8,7 +8,7 @@ export function Card({ className, children, ...props }) {
   return (
     <div
       className={cn(
-        'bg-white rounded-xl border border-slate-200/90 shadow-subtle overflow-hidden transition-all',
+        'bg-white rounded-xl border border-slate-200/80 shadow-card transition-all',
         className
       )}
       {...props}
@@ -21,7 +21,7 @@ export function Card({ className, children, ...props }) {
 export function CardHeader({ className, children, ...props }) {
   return (
     <div
-      className={cn('p-5 sm:p-6 border-b border-slate-100 flex flex-col gap-1', className)}
+      className={cn('p-5 sm:p-6 border-b border-slate-100/80 flex flex-col gap-1', className)}
       {...props}
     >
       {children}
@@ -63,7 +63,7 @@ export function CardFooter({ className, children, ...props }) {
   return (
     <div
       className={cn(
-        'p-4 sm:px-6 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between gap-4',
+        'p-4 sm:px-6 bg-slate-50/50 border-t border-slate-100/80 flex items-center justify-between gap-4 rounded-b-xl',
         className
       )}
       {...props}
@@ -72,4 +72,3 @@ export function CardFooter({ className, children, ...props }) {
     </div>
   );
 }
-

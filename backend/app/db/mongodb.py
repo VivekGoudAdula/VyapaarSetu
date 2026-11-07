@@ -1,7 +1,8 @@
 import asyncio
 import logging
 from typing import Optional, Tuple
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo import AsyncMongoClient
+from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.uri_parser import parse_uri
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, PyMongoError
 from app.core.config import settings
@@ -12,28 +13,27 @@ logger = logging.getLogger("vyapaar_setu.db")
 class MongoManager:
     """
     Manages MongoDB client lifecycle, connection pooling, and connection health checks.
+    Uses official native PyMongo AsyncMongoClient (PyMongo 4.9+ asynchronous driver).
     Supports standalone instances, MongoDB Atlas replica sets, and SRV connection strings.
     """
-    client: Optional[AsyncIOMotorClient] = None
-    db: Optional[AsyncIOMotorDatabase] = None
+    client: Optional[AsyncMongoClient] = None
+    db: Optional[AsyncDatabase] = None
     db_name: str = "vyapaar_setu"
 
     def connect(self) -> None:
         """
-        Initializes the async Motor client with connection pooling parameters.
+        Initializes the native async MongoDB client with connection pooling parameters.
         Does not block application startup if MongoDB is temporarily offline.
         """
-        # Determine target database name from URI or settings
         try:
             parsed = parse_uri(settings.MONGODB_URI)
             self.db_name = parsed.get("database") or settings.MONGODB_DATABASE
         except Exception:
             self.db_name = settings.MONGODB_DATABASE
 
-        logger.info(f"Initializing MongoDB client pool pointing to cluster (database: '{self.db_name}')")
+        logger.info(f"Initializing native PyMongo AsyncMongoClient (target database: '{self.db_name}')")
         
-        # Configure client with balanced timeout for cloud cluster discovery & local instances
-        self.client = AsyncIOMotorClient(
+        self.client = AsyncMongoClient(
             settings.MONGODB_URI,
             serverSelectionTimeoutMS=settings.MONGODB_TIMEOUT_MS,
             connectTimeoutMS=settings.MONGODB_TIMEOUT_MS,
@@ -42,18 +42,18 @@ class MongoManager:
         )
         self.db = self.client[self.db_name]
 
-    def close(self) -> None:
-        """Closes MongoDB connection pool gracefully during server shutdown."""
+    async def close(self) -> None:
+        """Closes native async MongoDB connection pool gracefully during server shutdown."""
         if self.client:
-            logger.info("Closing MongoDB connection pool.")
-            self.client.close()
+            logger.info("Closing native async MongoDB connection pool.")
+            await self.client.close()
             self.client = None
             self.db = None
 
     async def ping(self) -> Tuple[bool, Optional[str]]:
         """
         Executes a genuine health check against MongoDB.
-        Issues an administrative ping command through Motor.
+        Issues an administrative ping command through native PyMongo AsyncMongoClient.
         
         Returns:
             Tuple[bool, Optional[str]]: (is_healthy, error_details)
@@ -86,8 +86,8 @@ class MongoManager:
 mongo_manager = MongoManager()
 
 
-def get_database() -> AsyncIOMotorDatabase:
-    """Dependency helper to get the active database instance."""
+def get_database() -> AsyncDatabase:
+    """Dependency helper to get the active async database instance."""
     if mongo_manager.db is None:
         raise RuntimeError("Database connection has not been initialized.")
     return mongo_manager.db

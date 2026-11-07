@@ -1,53 +1,47 @@
 import React from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { LiveStatusBeacon } from './LiveStatusBeacon';
 
 /**
  * Top Application Header.
- * Features page context, mobile menu trigger, and real-time backend/database connectivity beacon.
+ * Features page context, breadcrumbs, responsive navigation triggers, and live MongoDB Atlas telemetry.
  */
-export function Header({ onToggleSidebar }) {
+export function Header({ onToggleMobileSidebar }) {
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 flex items-center justify-between">
-      {/* Left: Mobile Toggle & Page Context */}
+    <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between">
+      {/* Left: Mobile Navigation Trigger & Breadcrumbs */}
       <div className="flex items-center gap-3 sm:gap-4">
         <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 lg:hidden focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          aria-label="Toggle navigation menu"
+          onClick={onToggleMobileSidebar}
+          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 lg:hidden focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          aria-label="Toggle navigation drawer"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium select-none">
-            <span>Workspace</span>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium select-none">
+            <span>Vyapaar सेतु</span>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-600">Overview</span>
+            <span className="text-slate-600 font-medium">Workspace</span>
           </div>
           <h1 className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight leading-tight">
-            Distributor Hub
+            Distributor Overview
           </h1>
         </div>
       </div>
 
-      {/* Right: Real-time Telemetry & Quick Indicators */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Genuine Health Beacon */}
-        <LiveStatusBeacon />
-
-        {/* Minimal Bell Icon (Visual placeholder ready for Phase 7 real-time alerts) */}
-        <div className="relative">
-          <button
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            title="Real-time order alerts will activate upon distributor onboarding"
-            aria-label="Alerts"
-          >
-            <Bell className="w-4 h-4" />
-          </button>
+      {/* Right: Live Telemetry Beacon & Workspace Status */}
+      <div className="flex items-center gap-3">
+        {/* Workspace Branch Chip */}
+        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/80 border border-slate-200/60 text-xs text-slate-600 font-medium select-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+          <span>Primary Mandi Branch</span>
         </div>
+
+        {/* Real-time Atlas & API Health Beacon */}
+        <LiveStatusBeacon />
       </div>
     </header>
   );
 }
-

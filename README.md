@@ -119,10 +119,10 @@ Vyapaar-Setu/
 │   ├── app/
 │   │   ├── api/          # health.py (GET /health, /api/v1/health, /api/v1/ping)
 │   │   ├── core/         # config.py (Pydantic BaseSettings)
-│   │   ├── db/           # mongodb.py (Motor connection pool & fast socket ping)
+│   │   ├── db/           # mongodb.py (Native PyMongo Async client connection pool & health ping)
 │   │   └── main.py       # FastAPI application factory & lifespan context
 │   ├── venv/             # Local Python virtual environment
-│   ├── requirements.txt  # FastAPI, Uvicorn, Motor, PyMongo, Pydantic v2
+│   ├── requirements.txt  # FastAPI, Uvicorn, PyMongo (Async API v4.9+), Pydantic v2
 │   ├── .env.example      # Environment variable template
 │   └── README.md         # Backend architecture & documentation
 │
