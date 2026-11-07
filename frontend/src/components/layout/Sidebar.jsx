@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Building2
+  Building2,
+  Globe
 } from 'lucide-react';
 
 const NAVIGATION_GROUPS = [
@@ -25,7 +26,7 @@ const NAVIGATION_GROUPS = [
     items: [
       {
         name: 'Overview',
-        path: '/',
+        path: '/app',
         icon: LayoutDashboard,
         isImplemented: true,
       },
@@ -123,9 +124,9 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
       >
         {/* Brand Header */}
         <div className="h-16 px-4 border-b border-slate-100/90 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
+          <Link to="/app" className="flex items-center gap-3 overflow-hidden group">
             {/* Visual Bridge Arch Logo */}
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-subtle">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-subtle group-hover:bg-emerald-700 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                 <path d="M4 18C4 13.5817 7.58172 10 12 10C16.4183 10 20 13.5817 20 18" />
                 <path d="M8 18C8 15.7909 9.79086 14 12 14C14.2091 14 16 15.7909 16 18" stroke="#A7F3D0" />
@@ -144,7 +145,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
                 </p>
               </div>
             )}
-          </div>
+          </Link>
 
           {/* Close button on mobile */}
           <button
@@ -246,8 +247,20 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
           </button>
         </div>
 
-        {/* Workspace Footer Card */}
-        <div className="p-3 border-t border-slate-100/90 bg-slate-50/40">
+        {/* Workspace Footer Card & Website Link */}
+        <div className="p-3 border-t border-slate-100/90 bg-slate-50/40 space-y-2">
+          <Link
+            to="/"
+            title="Return to Public Website"
+            className={cn(
+              'flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-emerald-700 hover:bg-white border border-transparent hover:border-slate-200/80 transition-all select-none',
+              isCollapsed && 'justify-center p-2'
+            )}
+          >
+            <Globe className="w-3.5 h-3.5 shrink-0" />
+            {!isCollapsed && <span>Public Website</span>}
+          </Link>
+
           <div className={cn('p-2.5 rounded-lg bg-white border border-slate-200/80 shadow-subtle flex items-center gap-2.5', isCollapsed && 'justify-center p-2')}>
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center shrink-0">
               <Building2 className="w-4 h-4" />

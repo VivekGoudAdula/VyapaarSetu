@@ -52,16 +52,16 @@ export function LiveStatusBeacon({ className }) {
           pillClass: 'bg-emerald-50/90 text-emerald-800 border-emerald-200/80 hover:bg-emerald-100/80',
           dotClass: 'bg-emerald-500',
           pulseClass: 'bg-emerald-400',
-          label: 'Atlas Live',
-          subtext: 'FastAPI & MongoDB Atlas Operational',
+          label: 'Database Connected',
+          subtext: 'API & Database Operational',
         };
       case 'degraded':
         return {
           pillClass: 'bg-amber-50/90 text-amber-800 border-amber-200/80 hover:bg-amber-100/80',
           dotClass: 'bg-amber-500',
           pulseClass: 'bg-amber-400',
-          label: 'DB Offline',
-          subtext: 'FastAPI online; Database unreachable',
+          label: 'Degraded',
+          subtext: 'API Online; Database unreachable',
         };
       case 'disconnected':
         return {
@@ -154,30 +154,22 @@ export function LiveStatusBeacon({ className }) {
                 </span>
               </div>
 
-              {/* MongoDB Atlas Node */}
+              {/* MongoDB Node */}
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600 flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5 text-slate-400" /> MongoDB Atlas:
+                  <Database className="w-3.5 h-3.5 text-slate-400" /> Database:
                 </span>
                 <span className={cn(
                   'font-semibold inline-flex items-center gap-1',
                   health.data?.isDatabaseConnected ? 'text-emerald-700' : 'text-amber-600'
                 )}>
                   {health.data?.isDatabaseConnected ? (
-                    <><CheckCircle2 className="w-3.5 h-3.5" /> Connected ({health.data.databaseName})</>
+                    <><CheckCircle2 className="w-3.5 h-3.5" /> Connected</>
                   ) : (
                     <><AlertTriangle className="w-3.5 h-3.5" /> Disconnected</>
                   )}
                 </span>
               </div>
-
-              {/* Driver info */}
-              {health.data?.driver && (
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Async Driver:</span>
-                  <span className="font-mono text-slate-700 text-[11px]">{health.data.driver}</span>
-                </div>
-              )}
 
               {/* Latency */}
               {health.data?.latencyMs !== undefined && (

@@ -25,13 +25,17 @@ class MongoManager:
         Initializes the native async MongoDB client with connection pooling parameters.
         Does not block application startup if MongoDB is temporarily offline.
         """
+        # Authoritative database selection:
+        # settings.MONGODB_DATABASE is authoritative to guarantee strict multi-tenant isolation
+        # and prevent accidental connection to other databases on shared MongoDB clusters.
         try:
             parsed = parse_uri(settings.MONGODB_URI)
-            self.db_name = parsed.get("database") or settings.MONGODB_DATABASE
+            uri_db = parsed.get("database")
         except Exception:
-            self.db_name = settings.MONGODB_DATABASE
+            uri_db = None
 
-        logger.info(f"Initializing native PyMongo AsyncMongoClient (target database: '{self.db_name}')")
+        self.db_name = settings.MONGODB_DATABASE.strip() if settings.MONGODB_DATABASE else (uri_db or "vyapaar_setu")
+        logger.info(f"Initializing native PyMongo AsyncMongoClient (effective database: '{self.db_name}')")
         
         self.client = AsyncMongoClient(
             settings.MONGODB_URI,
