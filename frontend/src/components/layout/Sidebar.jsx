@@ -8,6 +8,7 @@ import {
   Package,
   Boxes,
   Users,
+  Tag,
   Mic,
   PhoneCall,
   BarChart3,
@@ -37,28 +38,34 @@ const NAVIGATION_GROUPS = [
     title: 'BUSINESS OPERATIONS',
     items: [
       {
+        name: 'Product Catalogue',
+        path: '/app/products',
+        icon: Package,
+        isImplemented: true,
+      },
+      {
+        name: 'Inventory Ledger',
+        path: '/app/inventory',
+        icon: Boxes,
+        isImplemented: true,
+      },
+      {
+        name: 'Promotional Schemes',
+        path: '/app/schemes',
+        icon: Tag,
+        isImplemented: true,
+      },
+      {
+        name: 'Retailer Book',
+        path: '/app/retailers',
+        icon: Users,
+        isImplemented: true,
+      },
+      {
         name: 'Orders Desk',
         icon: ShoppingBag,
         isImplemented: false,
         phase: 'Phase 7',
-      },
-      {
-        name: 'Product Catalogue',
-        icon: Package,
-        isImplemented: false,
-        phase: 'Phase 3',
-      },
-      {
-        name: 'Inventory Ledger',
-        icon: Boxes,
-        isImplemented: false,
-        phase: 'Phase 3',
-      },
-      {
-        name: 'Retailer Book',
-        icon: Users,
-        isImplemented: false,
-        phase: 'Phase 3',
       },
     ],
   },
@@ -83,16 +90,16 @@ const NAVIGATION_GROUPS = [
     title: 'INSIGHTS & CONFIG',
     items: [
       {
+        name: 'Settings',
+        path: '/app/settings',
+        icon: Settings,
+        isImplemented: true,
+      },
+      {
         name: 'Analytics Hub',
         icon: BarChart3,
         isImplemented: false,
         phase: 'Phase 9',
-      },
-      {
-        name: 'Settings',
-        icon: Settings,
-        isImplemented: false,
-        phase: 'Roadmap',
       },
     ],
   },
@@ -100,7 +107,7 @@ const NAVIGATION_GROUPS = [
 
 /**
  * Enterprise Navigation Sidebar for Vyapaar सेतु.
- * Features collapsible desktop state, mobile drawer, and refined roadmap presentation.
+ * Features collapsible desktop state, mobile drawer, and Phase 3 business modules.
  */
 export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const { organization } = useAuth();
@@ -178,6 +185,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
                       <NavLink
                         key={item.name}
                         to={item.path}
+                        end={item.path === '/app'}
                         onClick={() => onClose && onClose()}
                         title={isCollapsed ? item.name : undefined}
                         className={({ isActive }) =>

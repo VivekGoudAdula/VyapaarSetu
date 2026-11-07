@@ -6,6 +6,11 @@ import { OverviewPage } from '@/pages/OverviewPage';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { ProductsPage } from '@/pages/ProductsPage';
+import { InventoryPage } from '@/pages/InventoryPage';
+import { SchemesPage } from '@/pages/SchemesPage';
+import { RetailersPage } from '@/pages/RetailersPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
@@ -19,7 +24,12 @@ import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
  * - `/login`     -> Distributor Sign In (PublicOnlyRoute)
  * - `/register`  -> Wholesale Business Onboarding (PublicOnlyRoute)
  * - `/app`       -> Protected Distributor Dashboard & Operational Workspace (ProtectedRoute)
- * - Redirects for legacy/convenience paths (`/overview`, `/dashboard`) to `/app`
+ *   - `/app`           -> Operational Overview
+ *   - `/app/products`  -> Product Catalogue CRUD & Packaging Hierarchy
+ *   - `/app/inventory` -> Live Stock Balances & Movement Ledger
+ *   - `/app/schemes`   -> Promotional Schemes & Rules Engine
+ *   - `/app/retailers` -> Retailer Directory & Caller Book
+ *   - `/app/settings`  -> Business Operating Schedules & Zones
  */
 export const router = createBrowserRouter([
   {
@@ -60,6 +70,26 @@ export const router = createBrowserRouter([
           {
             path: 'overview',
             element: <Navigate to="/app" replace />,
+          },
+          {
+            path: 'products',
+            element: <ProductsPage />,
+          },
+          {
+            path: 'inventory',
+            element: <InventoryPage />,
+          },
+          {
+            path: 'schemes',
+            element: <SchemesPage />,
+          },
+          {
+            path: 'retailers',
+            element: <RetailersPage />,
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />,
           },
           {
             path: '*',

@@ -11,6 +11,7 @@ async def create_all_indexes(db: AsyncDatabase) -> None:
     Safe and idempotent — executes during startup on the isolated vyapaar_setu database.
     """
     try:
+        # Phase 2 Core Identity & Auth Indexes
         logger.info("Initializing database indexes for collection: users")
         await db.users.create_index(
             [("email_normalized", ASCENDING)],
@@ -67,8 +68,77 @@ async def create_all_indexes(db: AsyncDatabase) -> None:
             name="idx_refresh_sessions_expires_at"
         )
 
-        logger.info("All core database indexes verified successfully.")
+        # Phase 3 Business Setup & Configuration Indexes
+        logger.info("Initializing database indexes for collection: products")
+        await db.products.create_index(
+            [("organization_id", ASCENDING), ("sku", ASCENDING)],
+            unique=True,
+            name="uq_products_org_sku"
+        )
+        await db.products.create_index(
+            [("organization_id", ASCENDING), ("category", ASCENDING)],
+            name="idx_products_org_category"
+        )
+        await db.products.create_index(
+            [("organization_id", ASCENDING), ("is_available", ASCENDING)],
+            name="idx_products_org_available"
+        )
+        await db.products.create_index(
+            [("organization_id", ASCENDING), ("created_at", DESCENDING)],
+            name="idx_products_org_created_at"
+        )
+
+        logger.info("Initializing database indexes for collection: inventory")
+        await db.inventory.create_index(
+            [("organization_id", ASCENDING), ("product_id", ASCENDING)],
+            unique=True,
+            name="uq_inventory_org_product"
+        )
+        await db.inventory.create_index(
+            [("organization_id", ASCENDING), ("status", ASCENDING)],
+            name="idx_inventory_org_status"
+        )
+        await db.inventory.create_index(
+            [("organization_id", ASCENDING), ("quantity_available", ASCENDING)],
+            name="idx_inventory_org_available"
+        )
+
+        logger.info("Initializing database indexes for collection: inventory_ledger")
+        await db.inventory_ledger.create_index(
+            [("organization_id", ASCENDING), ("product_id", ASCENDING), ("created_at", DESCENDING)],
+            name="idx_ledger_org_product_created"
+        )
+        await db.inventory_ledger.create_index(
+            [("organization_id", ASCENDING), ("movement_type", ASCENDING)],
+            name="idx_ledger_org_movement"
+        )
+
+        logger.info("Initializing database indexes for collection: schemes")
+        await db.schemes.create_index(
+            [("organization_id", ASCENDING), ("is_active", ASCENDING), ("starts_at", ASCENDING)],
+            name="idx_schemes_org_active_starts"
+        )
+        await db.schemes.create_index(
+            [("organization_id", ASCENDING), ("applicable_product_ids", ASCENDING)],
+            name="idx_schemes_org_products"
+        )
+
+        logger.info("Initializing database indexes for collection: retailers")
+        await db.retailers.create_index(
+            [("organization_id", ASCENDING), ("primary_phone", ASCENDING)],
+            unique=True,
+            name="uq_retailers_org_primary_phone"
+        )
+        await db.retailers.create_index(
+            [("organization_id", ASCENDING), ("is_active", ASCENDING)],
+            name="idx_retailers_org_active"
+        )
+        await db.retailers.create_index(
+            [("organization_id", ASCENDING), ("store_name", ASCENDING)],
+            name="idx_retailers_org_store_name"
+        )
+
+        logger.info("All Vyapaar सेतु database indexes verified successfully.")
     except Exception as e:
         logger.error(f"Failed to create database indexes: {e}")
         # Non-fatal during transient startup, logged for diagnostics
-

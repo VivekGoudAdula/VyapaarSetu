@@ -1,7 +1,7 @@
 # Vyapaar सेतु
 ### *Baatcheet se business tak.*
 
-[![Phase](https://img.shields.io/badge/Phase-1%20Complete-059669?style=for-the-badge)](docs/PHASE_ROADMAP.md)
+[![Phase](https://img.shields.io/badge/Phase-3%20Complete-059669?style=for-the-badge)](docs/PHASE_ROADMAP.md)
 [![UI Standard](https://img.shields.io/badge/UI%20Standard-%2410%2C000%20SaaS-0F172A?style=for-the-badge)](docs/DESIGN_SYSTEM.md)
 [![Architecture](https://img.shields.io/badge/Architecture-Multi--Tenant%20Voice%20SaaS-0D9488?style=for-the-badge)](docs/ARCHITECTURE.md)
 [![Backend](https://img.shields.io/badge/FastAPI-Python%203.11%2B-009688?style=for-the-badge&logo=fastapi)](backend/README.md)
@@ -142,15 +142,14 @@ Vyapaar-Setu/
 
 ## 6. CURRENT STATUS & GOVERNANCE
 
-> **Current Milestone: PHASE 2 COMPLETED — AUTHENTICATION & MULTI-TENANT SAAS.**
-> All Phase 2 deliverables are verified:
-> - User registration and organization onboarding (`/register`, `POST /api/v1/auth/register`).
-> - Secure login with brute-force rate limiting (`/login`, `POST /api/v1/auth/login`).
-> - Argon2id password hashing and OWASP security compliance.
-> - Short-lived JWT access tokens in memory; rotated refresh tokens in HttpOnly cookies with token reuse detection.
-> - Strict Tenant Isolation via `TenantContext` — `organization_id` derived exclusively from server-verified session.
-> - Role-Based Access Control (`ORGANIZATION_OWNER` vs `ORGANIZATION_STAFF`).
-> - Protected dashboard routes (`/app`) and public guards (`/login`, `/register`).
-> - Operations strictly isolated to database `vyapaar_setu` on MongoDB Atlas cluster.
-> **Standing by for user review and explicit authorization before proceeding to Phase 3.**
+> **Current Milestone: PHASE 3 COMPLETED — BUSINESS SETUP & CONFIGURATION.**
+> All Phase 3 deliverables are fully implemented and verified on the isolated `vyapaar_setu` database:
+> - **Product Catalogue Master:** Full CRUD, packaging unit hierarchies (e.g. 1 Carton = 12 Pieces), wholesale rates, MRP, vernacular aliases (`aliases`), category filters, and organization-scoped unique SKU constraint.
+> - **Inventory Balances & Ledger:** Stock snapshots (`quantity_on_hand`, `quantity_available`, `reorder_threshold`), real-time stock alert status calculation (`in_stock`, `low_stock`, `out_of_stock`), non-negative stock invariant, and append-only immutable movement ledger (`OPENING_STOCK`, `STOCK_RECEIVED`, `MANUAL_ADJUSTMENT`, `STOCK_DAMAGED`, `STOCK_RETURNED`).
+> - **Promotional Schemes & Rules Engine:** CRUD and deterministic calculation engine for `BUY_X_GET_Y` (Free Goods), `VOLUME_SLAB_DISCOUNT`, `PERCENTAGE_DISCOUNT`, and `FIXED_AMOUNT_DISCOUNT` with validity date windows and interactive testing sandbox.
+> - **Retailer Directory & Caller ID:** Kirana accounts, validated 10-digit primary mobile numbers for Vobiz telephony matching, GSTIN validation, credit limit tracking, and multiple delivery address management per retailer.
+> - **Business Operating Settings:** Trade name profile, weekly operating hours scheduler (Monday–Sunday open/close times), minimum order value (₹), order cut-off times, and serviced delivery areas/PIN codes.
+> - **Multi-Tenant Data Isolation:** Strict enforcement via verified `TenantContext` — all queries, indexes, and mutations scoped to `organization_id`.
+> - **UI / UX Experience:** 5 responsive pages in `/app` (Products, Inventory, Schemes, Retailers, Settings) crafted to the $10,000 SaaS light-theme benchmark with Poppins typography and emerald `#059669` accents.
+> **Standing by for user review and explicit authorization before proceeding to Phase 4.**
 

@@ -9,6 +9,11 @@ from app.db.indexes import create_all_indexes
 from app.api.health import router as health_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.organizations import router as organizations_router
+from app.api.v1.products import router as products_router
+from app.api.v1.inventory import router as inventory_router
+from app.api.v1.schemes import router as schemes_router
+from app.api.v1.retailers import router as retailers_router
+from app.api.v1.settings import router as settings_router
 
 # Configure logging
 logging.basicConfig(
@@ -78,6 +83,11 @@ def create_application() -> FastAPI:
     app.include_router(health_router, prefix=settings.API_V1_PREFIX)
     app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
     app.include_router(organizations_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(products_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(inventory_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(schemes_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(retailers_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(settings_router, prefix=settings.API_V1_PREFIX)
 
     @app.get("/", tags=["Root"])
     async def root():
