@@ -73,16 +73,16 @@ const NAVIGATION_GROUPS = [
     title: 'VOICE COMMERCE',
     items: [
       {
-        name: 'Telephony & Lines',
+        name: 'Twilio Voice & Calls',
         path: '/app/telephony',
         icon: PhoneCall,
         isImplemented: true,
       },
       {
-        name: 'Voice Agent (Vobiz)',
+        name: 'AI Voice Engine (Gnani)',
         icon: Mic,
         isImplemented: false,
-        phase: 'Phase 5 & 6',
+        phase: 'Phase 5',
       },
     ],
   },

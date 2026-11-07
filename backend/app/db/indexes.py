@@ -138,54 +138,50 @@ async def create_all_indexes(db: AsyncDatabase) -> None:
             name="idx_retailers_org_store_name"
         )
 
-        # Phase 4 Telephony & Call Events Indexes
+        # Telephony & Call Audit Indexes
         logger.info("Initializing database indexes for collection: phone_configs")
-        await db.phone_configs.create_index(
-            [("organization_id", ASCENDING)],
-            unique=True,
-            name="uq_phone_configs_org"
-        )
         await db.phone_configs.create_index(
             [("phone_number", ASCENDING)],
             unique=True,
-            name="uq_phone_configs_number"
+            name="uq_phone_configs_phone_number"
         )
         await db.phone_configs.create_index(
-            [("phone_number", ASCENDING), ("is_active", ASCENDING)],
-            name="idx_phone_configs_number_active"
+            [("organization_id", ASCENDING)],
+            unique=True,
+            name="uq_phone_configs_organization"
+        )
+        await db.phone_configs.create_index(
+            [("provider", ASCENDING), ("phone_number", ASCENDING)],
+            name="idx_phone_configs_provider_phone"
         )
 
         logger.info("Initializing database indexes for collection: calls")
         await db.calls.create_index(
-            [("vobiz_call_id", ASCENDING)],
+            [("call_sid", ASCENDING)],
             unique=True,
-            name="uq_calls_vobiz_id"
+            name="uq_calls_call_sid"
         )
         await db.calls.create_index(
             [("organization_id", ASCENDING), ("created_at", DESCENDING)],
             name="idx_calls_org_created_at"
         )
         await db.calls.create_index(
-            [("organization_id", ASCENDING), ("call_status", ASCENDING)],
+            [("organization_id", ASCENDING), ("status", ASCENDING)],
             name="idx_calls_org_status"
         )
         await db.calls.create_index(
             [("organization_id", ASCENDING), ("retailer_id", ASCENDING)],
             name="idx_calls_org_retailer"
         )
-        await db.calls.create_index(
-            [("organization_id", ASCENDING), ("normalized_from_number", ASCENDING)],
-            name="idx_calls_org_caller_number"
-        )
 
         logger.info("Initializing database indexes for collection: call_events")
         await db.call_events.create_index(
-            [("organization_id", ASCENDING), ("call_id", ASCENDING), ("event_timestamp", ASCENDING)],
-            name="idx_call_events_org_call_time"
+            [("call_id", ASCENDING), ("created_at", ASCENDING)],
+            name="idx_call_events_call_created"
         )
         await db.call_events.create_index(
-            [("vobiz_call_id", ASCENDING), ("event_timestamp", ASCENDING)],
-            name="idx_call_events_vobiz_time"
+            [("organization_id", ASCENDING), ("created_at", DESCENDING)],
+            name="idx_call_events_org_created"
         )
 
         logger.info("All Vyapaar सेतु database indexes verified successfully.")

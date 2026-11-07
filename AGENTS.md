@@ -13,7 +13,7 @@
 - **Official Tagline:** `Baatcheet se business tak.` *(exact spelling mandatory)*
 - **Product Domain:** AI-Powered Voice Commerce & B2B Order Automation SaaS for Indian wholesale distributors, FMCG suppliers, and kirana stockists.
 - **Primary Market:** India (multilingual: Hindi, Telugu, English, Hinglish).
-- **Core Value Proposition:** An always-available AI sales employee connected to a dedicated business phone number (Vobiz) that answers incoming retailer calls, answers pricing/stock/scheme enquiries from live distributor data, and automatically captures confirmed orders into the distributor's dashboard.
+- **Core Value Proposition:** An always-available AI sales employee connected to a dedicated business phone number (Twilio) that answers incoming retailer calls, answers pricing/stock/scheme enquiries from live distributor data, and automatically captures confirmed orders into the distributor's dashboard.
 - **The Core Golden Rule:** **THE VOICE-TO-ORDER WORKFLOW IS THE HEART OF THE PRODUCT.** All supporting modules exist solely to make the voice-to-order pipeline fast, accurate, and seamless. Do not turn this into a bloated generic ERP.
 
 ---
@@ -45,7 +45,7 @@ Every agent must respect these technology constraints without exception. Any pul
 | **Validation Layer** | **Pydantic v2** | Unvalidated dict passing, raw schema bypass |
 | **Database** | **MongoDB (Motor / PyMongo)** | PostgreSQL, MySQL, SQLite, or ORMs that assume relational schemas |
 | **Real-Time Layer** | **WebSockets** (FastAPI native) | Polling loops, Firebase Realtime DB |
-| **Telephony Integration** | **Vobiz** (Incoming Webhooks & Streams) | Mock telephony, Twilio without user approval |
+| **Telephony Integration** | **Twilio Programmable Voice & Media Streams** | Mock telephony, fake provider wrappers |
 | **Speech-to-Text (STT)** | **Gnani Prisma** *(preferred candidate)* | Fake browser speech recognition in production |
 | **LLM Reasoning** | **Groq (Qwen models candidate)** | Client-side LLM calls, hardcoded responses |
 | **Text-to-Speech (TTS)**| **Gnani Timbre** *(preferred candidate)* | Fake browser synthesis in production |

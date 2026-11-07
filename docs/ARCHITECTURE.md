@@ -14,9 +14,9 @@ flowchart TD
         DistributorBrowser["Distributor Web App\n(React + Vite + Tailwind)"]
     end
 
-    subgraph TelephonyCloud["Telephony Layer (Vobiz)"]
-        VobizNumber["Vobiz Dedicated Virtual No."]
-        VobizEngine["Vobiz Call Control &\nAudio Streaming Gateway"]
+    subgraph TelephonyCloud["Telephony Layer (Twilio)"]
+        TwilioNumber["Twilio Business Phone No.\n(Toll-Free 1800 / E.164)"]
+        TwilioEngine["Twilio Programmable Voice &\nMedia Streams Gateway (WSS / PCMU 8kHz)"]
     end
 
     subgraph BackendApp["Vyapaar सेतु Backend (Python / FastAPI)"]
@@ -52,9 +52,9 @@ flowchart TD
     end
 
     %% Call Flow
-    RetailerCaller -->|"PSTN Phone Call"| VobizNumber
-    VobizNumber --> VobizEngine
-    VobizEngine -->|"Inbound Webhook / Audio Stream"| VoiceSessionMgr
+    RetailerCaller -->|"PSTN Phone Call"| TwilioNumber
+    TwilioNumber --> TwilioEngine
+    TwilioEngine -->|"Inbound Webhook (TwiML) / Media Stream (WSS)"| VoiceSessionMgr
     VoiceSessionMgr <-->|"Raw Audio Stream"| STT
     STT -->|"Transcribed Text"| VoiceSessionMgr
     VoiceSessionMgr <-->|"Context + Tool Signatures"| LLM
@@ -485,7 +485,7 @@ Complete audit log of every inbound phone call handled by the AI.
 {
   "_id": "ObjectId",
   "organization_id": "ObjectId",
-  "call_sid": "vobiz_call_938102938102",
+  "call_sid": "CA938102938102abcdef",
   "from_phone": "+919848012345",
   "to_phone": "+918045678900",
   "retailer_id": "ObjectId", // linked if caller is recognized
@@ -513,7 +513,7 @@ Turn-by-turn conversational transcript of the voice session.
   "_id": "ObjectId",
   "organization_id": "ObjectId",
   "call_id": "ObjectId",
-  "call_sid": "vobiz_call_938102938102",
+  "call_sid": "CA938102938102abcdef",
   "turns": [
     {
       "turn_number": 1,
@@ -603,11 +603,11 @@ The central business document of the platform.
     {
       "status": "PENDING_ACCEPTANCE",
       "changed_by": "SYSTEM_AI_VOICE",
-      "note": "Order captured from voice call vobiz_call_938102938102",
+      "note": "Order captured from voice call CA938102938102abcdef",
       "timestamp": "ISODate"
     }
   ],
-  "idempotency_key": "idemp_call_vobiz_call_938102938102_order",
+  "idempotency_key": "idemp_call_CA938102938102abcdef_order",
   "created_at": "ISODate",
   "updated_at": "ISODate"
 }
@@ -628,7 +628,7 @@ The voice AI architecture connects telecommunications, streaming audio, transcri
 sequenceDiagram
     autonumber
     actor Caller as Retailer (Phone)
-    participant Vobiz as Vobiz Telephony
+    participant Twilio as Twilio Programmable Voice
     participant SessionMgr as Voice Session Service
     participant STT as Gnani Prisma STT
     participant LLM as Groq (Qwen) LLM
@@ -637,18 +637,21 @@ sequenceDiagram
     participant TTS as Gnani Timbre TTS
     participant WS as WebSocket Hub (Dashboard)
 
-    Caller->>Vobiz: Dials Distributor Business Number
-    Vobiz->>SessionMgr: Inbound Webhook (CallSID, From, To)
+    Caller->>Twilio: Dials Distributor Business Number (1800 Toll-Free)
+    Twilio->>SessionMgr: Inbound Webhook POST (CallSid, From, To)
     SessionMgr->>DB: Query PhoneConfig & Retailer by From Number
     DB-->>SessionMgr: OrgContext & Retailer Profile Loaded
+    SessionMgr-->>Twilio: TwiML <Connect><Stream url="wss://..."/>
+    Twilio<<->>SessionMgr: Connects Bidirectional Media Stream (WSS / PCMU 8kHz)
+    
     SessionMgr->>TTS: Request Personalized Greeting Audio
-    TTS-->>SessionMgr: Greeting Audio Buffer
-    SessionMgr-->>Vobiz: Stream Audio Back to Caller
-    Vobiz-->>Caller: Speaks Greeting in Retailer's Language
+    TTS-->>SessionMgr: Greeting Audio Buffer (μ-law 8kHz)
+    SessionMgr-->>Twilio: Send Media Event (Base64 audio payload)
+    Twilio-->>Caller: Speaks Greeting in Retailer's Language
 
-    Note over Caller,Vobiz: Spoken Request: "5 carton Fortune oil chahiye"
-    Caller->>Vobiz: Spoken Audio
-    Vobiz->>SessionMgr: Streaming Audio Chunks (WebSocket)
+    Note over Caller,Twilio: Spoken Request: "5 carton Fortune oil chahiye"
+    Caller->>Twilio: Spoken Audio
+    Twilio->>SessionMgr: Streaming Audio Chunks (event: media, payload: base64)
     SessionMgr->>STT: Stream Audio for Real-time Transcription
     STT-->>SessionMgr: Partial / Final Transcript: "5 carton Fortune oil..."
 
@@ -666,8 +669,8 @@ sequenceDiagram
     
     SessionMgr->>TTS: Synthesize Spoken Audio
     TTS-->>SessionMgr: Audio Buffer
-    SessionMgr-->>Vobiz: Stream Audio to Caller
-    Vobiz-->>Caller: Speaks Price & Stock Confirmation
+    SessionMgr-->>Twilio: Stream Audio to Caller (event: media)
+    Twilio-->>Caller: Speaks Price & Stock Confirmation
 
     Note over Caller,Vobiz: Verbal Confirmation: "Haan theek hai, confirm kardo"
     Caller->>Vobiz: Spoken Audio
@@ -746,63 +749,4 @@ Distributor Browser 1 (Owner)     Distributor Browser 2 (Staff)
 3. **Rate Limiting:** IP-based and token-based rate limiting on public and auth endpoints (`/auth/login`, `/webhooks/*`).
 4. **Idempotency Keys:** All order creation and webhook ingestion endpoints require or compute an `idempotency_key` based on `call_sid` and event sequence to prevent double billing or duplicate orders during network retries.
 5. **PII and Voice Privacy:** Call recordings and audio transcripts represent confidential business trade data. Audio URLs must use short-lived pre-signed URLs; transcripts are encrypted at rest and accessible only to verified Organization Owners.
-
----
-
-## 8. TELEPHONY & AUDIO STREAMING SPECIFICATION (PHASE 4 & 4.1 HARDENED)
-
-The Vobiz telephony integration layer acts as the real-time bridge between India's telecommunications PSTN network and the Vyapaar सेतु voice processing infrastructure.
-
-### 8.1 Inbound Webhook & Cryptographic Verification
-1. **Canonical HMAC-SHA256 Verification (Vobiz V3 & V2):**
-   - Inbound webhook requests (`POST /api/v1/webhooks/vobiz/inbound-call` and `/api/v1/webhooks/vobiz/call-status`) are cryptographically verified using `X-Vobiz-Signature-V3` / `X-Vobiz-Signature-V3-Nonce` or legacy `X-Vobiz-Signature-V2` / `X-Vobiz-Signature-V2-Nonce`.
-   - V3 signature construct: `Base64(HMAC_SHA256(key=authToken, data=canonicalBaseURL + "." + nonce))`.
-   - V2 signature construct: `Base64(HMAC_SHA256(key=authToken, data=canonicalBaseURL + nonce))`.
-   - Replay attack guard: Each nonce is validated for uniqueness within a 5-minute sliding TTL cache. Reused nonces fail closed with HTTP 401.
-2. **Direct-Child VobizXML Generation:**
-   - In response to an incoming call, the backend produces direct-child VobizXML:
-     ```xml
-     <Response>
-       <Stream bidirectional="true" keepCallAlive="true">wss://api.example.com/api/v1/webhooks/vobiz/stream</Stream>
-     </Response>
-     ```
-   - `<Connect>` wrappers are strictly excluded in accordance with the official Vobiz Voice API specification.
-
-### 8.2 WebSocket Streaming Protocol & Frame Parsing
-1. **Nested Start Frame Compatibility:**
-   - The stream session initializes on receipt of an official nested start frame:
-     ```json
-     {
-       "event": "start",
-       "start": {
-         "callId": "CALL_ID",
-         "streamId": "STREAM_ID",
-         "mediaFormat": {
-           "encoding": "audio/x-l16",
-           "sampleRate": 16000
-         }
-       }
-     }
-     ```
-   - The parser inspects `data["start"]` first, falling back to top-level attributes only when nested keys are omitted.
-2. **Multi-Codec Audio Decoder:**
-   - Supports dynamically negotiated `mediaFormat`:
-     - `audio/x-l16` @ 16,000 Hz: 32,000 bytes/sec (16-bit mono).
-     - `audio/x-l16` @ 8,000 Hz: 16,000 bytes/sec (16-bit mono).
-     - `audio/x-mulaw` @ 8,000 Hz: 8,000 bytes/sec (8-bit mono).
-   - Audio chunks in `media` events (`{"event": "media", "media": {"payload": "<Base64>"}}`) are decoded and duration is computed dynamically based on the negotiated sample rate and byte width.
-3. **Definitive Carrier Termination:**
-   - The WebSocket connection closing constitutes definitive carrier hangup. Stream cleanup does not depend on an optional JSON `stop` frame.
-4. **Barge-In Control Primitives:**
-   - Pre-configured control frames for Phase 5 interruption handling:
-     - Outbound checkpoint: `{"event": "checkpoint", "name": "<NAME>"}`.
-     - Outbound audio flush: `{"event": "clearAudio"}`.
-     - Inbound tracking: `playedStream` and `clearedAudio` frame handling.
-
-### 8.3 State Machine Monotonicity
-1. **Terminal State Immutability:**
-   - Call status follows a strict monotonic lifecycle: `INITIATED` -> `RINGING` -> `IN_PROGRESS` -> `COMPLETED` / `FAILED` / `BUSY` / `REJECTED` / `NO_ANSWER`.
-   - Terminal states cannot be regressed by delayed, retransmitted, or out-of-order webhook callbacks.
-   - Updates are executed with atomic MongoDB query filters: `{"call_status": {"$nin": ["COMPLETED", "FAILED", "BUSY", "REJECTED", "NO_ANSWER", "CANCELLED"]}}`.
-   - Durations are updated monotonically using `$max` so smaller out-of-order duration updates cannot shrink recorded call times.
 

@@ -15,7 +15,7 @@ from app.api.v1.schemes import router as schemes_router
 from app.api.v1.retailers import router as retailers_router
 from app.api.v1.settings import router as settings_router
 from app.api.v1.telephony import router as telephony_router
-from app.api.v1.webhooks.vobiz import router as vobiz_webhook_router
+from app.api.v1.webhooks.twilio import router as twilio_webhooks_router
 
 # Configure logging
 logging.basicConfig(
@@ -97,7 +97,7 @@ def create_application() -> FastAPI:
     app.include_router(retailers_router, prefix=settings.API_V1_PREFIX)
     app.include_router(settings_router, prefix=settings.API_V1_PREFIX)
     app.include_router(telephony_router, prefix=settings.API_V1_PREFIX)
-    app.include_router(vobiz_webhook_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(twilio_webhooks_router, prefix=settings.API_V1_PREFIX)
 
     @app.get("/", tags=["Root"])
     async def root():

@@ -1,4 +1,3 @@
 """
-Vyapaar सेतु — Vobiz Webhook Routers.
+Webhook handlers for external telecommunication providers and third-party integrations.
 """
-

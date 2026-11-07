@@ -1,29 +1,28 @@
 import { apiRequest } from './api';
 
 /**
- * Frontend API client for Telephony Management, Vobiz Phone Provisioning,
- * Call Logs, and Audio Stream Telemetry.
+ * Frontend API client for Twilio Programmable Voice & Telephony Management.
  */
 export const telephonyService = {
   /**
-   * Retrieves active Vobiz phone configuration and integration URLs.
+   * Fetches active organization phone configuration and voice persona defaults.
    */
-  async getPhoneConfig() {
+  async getConfig() {
     return apiRequest('/api/v1/telephony/config');
   },
 
   /**
-   * Updates or assigns the dedicated Vobiz business phone number.
+   * Updates organization's assigned Twilio phone number and voice persona settings.
    */
-  async updatePhoneConfig(data) {
+  async updateConfig(data) {
     return apiRequest('/api/v1/telephony/config', {
-      method: 'POST',
+      method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
   /**
-   * Tests Vobiz API credentials and network connectivity.
+   * Validates Twilio credentials and returns live account connection diagnostic.
    */
   async testConnection() {
     return apiRequest('/api/v1/telephony/test-connection', {
@@ -32,9 +31,9 @@ export const telephonyService = {
   },
 
   /**
-   * Lists paginated call history with filters.
+   * Retrieves paginated list of inbound calls with caller ID resolution.
    */
-  async listCalls({ page = 1, limit = 20, status = '', caller_classification = '' } = {}) {
+  async listCalls({ page = 1, limit = 15, status = '' } = {}) {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
@@ -43,28 +42,14 @@ export const telephonyService = {
     if (status && status.trim()) {
       params.append('status', status.trim());
     }
-    if (caller_classification && caller_classification.trim()) {
-      params.append('caller_classification', caller_classification.trim());
-    }
 
     return apiRequest(`/api/v1/telephony/calls?${params.toString()}`);
   },
 
   /**
-   * Retrieves full details and event logs for a specific call session.
+   * Retrieves single call detail with chronological audit events.
    */
   async getCallDetail(callId) {
     return apiRequest(`/api/v1/telephony/calls/${callId}`);
   },
-
-  /**
-   * Simulates an incoming call for testing Kirana retailer caller-ID resolution.
-   */
-  async simulateCall(data) {
-    return apiRequest('/api/v1/telephony/simulate-call', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
 };
-

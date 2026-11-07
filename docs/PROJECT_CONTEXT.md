@@ -126,15 +126,16 @@ Vyapaar सेतु powers a comprehensive, closed-loop business journey connec
 - **Commercial Schemes & Trade Promos:** Active trade promotions (e.g., *"Buy 10 petis get 1 free"*, *"₹200 instant discount on orders above ₹10,000"*, *"5% cash discount on same-day dispatch"*), validity dates, and eligibility rules.
 - **Operating Parameters:** Mandi operating hours, daily order cutoff times, delivery zones, minimum order value (MOV).
 
-#### Step 4 — Vobiz Telephony Configuration
-- Distributor connects an assigned business phone number through Vobiz telephony integration.
-- The incoming call webhook URL is mapped to the organization's unique voice session endpoint.
-- Call parameters configured: greeting language, fallback transfer number (to a human staff member if needed), and operating hours voicemail/agent behavior.
+#### Step 4 — Twilio Telephony Configuration & Webhook Linking
+- Distributor connects an assigned business phone number through Twilio Programmable Voice & Media Streams integration.
+- The incoming call webhook URL is mapped in Twilio Console to the organization's unique voice session endpoint (`/api/v1/webhooks/twilio/inbound-call`).
+- Call parameters configured: greeting language, fallback transfer number (to a human staff member if needed), and operating hours agent behavior.
 
 #### Step 5 — Retailer Initiates Inbound Call
 - A kirana store owner or purchasing clerk dials the distributor's dedicated Vyapaar सेतु phone number.
-- Vobiz receives the call and fires an inbound call webhook with caller identification (`caller_id`, `call_sid`, `timestamp`).
-- The backend matches `caller_id` against the organization's registered `retailers` collection. If recognized, the retailer's store name, previous order history, and credit terms are instantly made available to the voice session context.
+- Twilio receives the call, validates cryptographic signature (`X-Twilio-Signature`), and fires an inbound call webhook with caller identification (`From`, `To`, `CallSid`).
+- The backend matches `From` number against the organization's registered `retailers` collection. If recognized, the retailer's store name, previous order history, and credit terms are instantly made available to the voice session context.
+- Backend responds with TwiML `<Connect><Stream url="wss://...">` establishing bidirectional WebSocket media streaming.
 
 #### Step 6 — Multilingual AI Conversation & Tool Execution
 - The AI agent answers within 2 rings with a warm, professional, localized greeting:
