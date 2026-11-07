@@ -38,6 +38,18 @@ class TelephonyService:
         """Retrieves the active phone configuration for a specific organization."""
         doc = await self.db.phone_configs.find_one({"organization_id": organization_id})
         if not doc:
+            # If VOBIZ_PHONE_NUMBER is configured in .env, automatically provision it for this organization
+            # provided no other organization has claimed it
+            if settings.VOBIZ_PHONE_NUMBER and settings.VOBIZ_PHONE_NUMBER.strip():
+                normalized_env = normalize_e164(settings.VOBIZ_PHONE_NUMBER.strip())
+                existing = await self.db.phone_configs.find_one({"phone_number": normalized_env})
+                if not existing:
+                    return await self.upsert_phone_config(
+                        organization_id=organization_id,
+                        phone_number=normalized_env,
+                        is_active=True,
+                        display_label="Primary Wholesale Sales Line (.env)",
+                    )
             return None
         return self._format_phone_config(doc)
 
@@ -105,6 +117,22 @@ class TelephonyService:
                 "is_active": True
             })
 
+        # Fallback: if dialed number matches settings.VOBIZ_PHONE_NUMBER in .env and not yet bound,
+        # auto-bind to the first active organization
+        if not doc and settings.VOBIZ_PHONE_NUMBER:
+            normalized_env = normalize_e164(settings.VOBIZ_PHONE_NUMBER.strip())
+            if normalized == normalized_env:
+                first_org = await self.db.organizations.find_one({"is_active": True})
+                if first_org:
+                    org_id = str(first_org["_id"])
+                    await self.upsert_phone_config(
+                        organization_id=org_id,
+                        phone_number=normalized_env,
+                        is_active=True,
+                        display_label="Default Vobiz Business Line (.env)",
+                    )
+                    doc = await self.db.phone_configs.find_one({"organization_id": org_id})
+
         return doc
 
     async def test_connection(self) -> Dict[str, Any]:
@@ -118,3 +146,4 @@ class TelephonyService:
             "provider": "VOBIZ",
             "auth_id_configured": bool(settings.VOBIZ_AUTH_ID),
         }
+

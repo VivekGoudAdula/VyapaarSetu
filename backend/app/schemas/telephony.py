@@ -92,3 +92,4 @@ class SimulateInboundCallRequest(BaseModel):
     to_number: Optional[str] = Field(default=None, description="Distributor's assigned number. If omitted, uses active phone config.")
     call_uuid: Optional[str] = Field(default=None, description="Optional custom CallUUID")
     duration_seconds: Optional[int] = Field(default=0, ge=0)
+

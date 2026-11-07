@@ -190,3 +190,4 @@ async def simulate_inbound_call(
     call_id = str(call_doc["_id"])
     detail = await call_service.get_call_detail(tenant.organization_id, call_id)
     return detail
+

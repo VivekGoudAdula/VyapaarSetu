@@ -24,9 +24,9 @@ class VobizClient:
         auth_token: Optional[str] = None,
         timeout_seconds: float = 8.0,
     ):
-        self.base_url = (base_url or settings.VOBIZ_API_BASE_URL).rstrip("/")
-        self.auth_id = (auth_id or settings.VOBIZ_AUTH_ID).strip()
-        self.auth_token = (auth_token or settings.VOBIZ_AUTH_TOKEN).strip()
+        self.base_url = (base_url if base_url is not None else settings.VOBIZ_API_BASE_URL).rstrip("/")
+        self.auth_id = (auth_id if auth_id is not None else settings.VOBIZ_AUTH_ID).strip()
+        self.auth_token = (auth_token if auth_token is not None else settings.VOBIZ_AUTH_TOKEN).strip()
         self.timeout = timeout_seconds
 
     @property
@@ -126,3 +126,4 @@ class VobizClient:
 
 # Singleton client instance
 vobiz_client = VobizClient()
+

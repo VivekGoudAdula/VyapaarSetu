@@ -404,3 +404,4 @@ class CallService:
         call_formatted["events"] = events
 
         return call_formatted
+
