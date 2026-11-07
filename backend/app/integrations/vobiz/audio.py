@@ -1,7 +1,7 @@
 """
 Vyapaar सेतु — Vobiz Bidirectional Audio Streaming Codec & Transport.
-Handles binary PCM 16kHz audio frame decoding, base64 transcoding,
-packet telemetry, and outbound audio response construction for Vobiz Stream.
+Handles binary PCM 16kHz/8kHz and μ-law audio frame decoding, base64 transcoding,
+negotiated mediaFormat handling, packet telemetry, and outbound audio/control message construction.
 """
 
 import base64
@@ -18,35 +18,61 @@ class AudioPacket:
     stream_id: str
     call_uuid: Optional[str]
     sequence_number: int
-    raw_pcm_bytes: bytes
+    raw_audio_bytes: bytes
     byte_length: int
     duration_ms: float
+    encoding: str
+    sample_rate: int
 
 
 class AudioFrameDecoder:
     """
     Decodes and tracks inbound audio frames over the Vobiz WebSocket stream.
-    Default audio format: audio/x-l16;rate=16000 (16-bit Linear PCM, 16kHz, mono).
-    1 second of audio = 16,000 samples * 2 bytes = 32,000 bytes.
+    Supports documented Vobiz inbound formats:
+    - audio/x-l16 (Linear PCM 16-bit, 8000 Hz, 16000 Hz, or 24000 Hz)
+    - audio/x-mulaw (G.711 μ-law 8-bit, 8000 Hz)
     """
 
-    BYTES_PER_SECOND_16K_MONO = 32000  # 16000 samples/sec * 2 bytes/sample (16-bit)
-
-    def __init__(self, stream_id: str, call_uuid: Optional[str] = None):
+    def __init__(
+        self,
+        stream_id: str,
+        call_uuid: Optional[str] = None,
+        media_format: Optional[Dict[str, Any]] = None,
+    ):
         self.stream_id = stream_id
         self.call_uuid = call_uuid
         self.packet_count: int = 0
-        self.total_pcm_bytes: int = 0
+        self.total_raw_bytes: int = 0
+
+        # Parse negotiated inbound media format
+        format_dict = media_format or {}
+        raw_encoding = str(format_dict.get("encoding") or format_dict.get("contentType") or "audio/x-l16").lower()
+        self.inbound_encoding = "audio/x-mulaw" if "mulaw" in raw_encoding or "ulaw" in raw_encoding else "audio/x-l16"
+        
+        try:
+            self.inbound_sample_rate = int(format_dict.get("sampleRate") or (8000 if self.inbound_encoding == "audio/x-mulaw" else 16000))
+        except (ValueError, TypeError):
+            self.inbound_sample_rate = 8000 if self.inbound_encoding == "audio/x-mulaw" else 16000
+
+        # Calculate bytes per second based on bit depth:
+        # L16 is 16-bit (2 bytes per sample) mono
+        # mulaw is 8-bit (1 byte per sample) mono
+        if self.inbound_encoding == "audio/x-mulaw":
+            self.bytes_per_second = self.inbound_sample_rate * 1
+        else:
+            self.bytes_per_second = self.inbound_sample_rate * 2
 
     @property
     def total_duration_seconds(self) -> float:
-        """Calculates total stream duration received based on raw PCM byte volume."""
-        return round(self.total_pcm_bytes / self.BYTES_PER_SECOND_16K_MONO, 3)
+        """Calculates total stream duration received based on raw byte volume and negotiated rate."""
+        if self.bytes_per_second <= 0:
+            return 0.0
+        return round(self.total_raw_bytes / self.bytes_per_second, 3)
 
     def decode_media_message(self, message: Dict[str, Any]) -> Optional[AudioPacket]:
         """
         Decodes an incoming 'media' event from Vobiz WebSocket.
-        Vobiz sends audio payload either in message['media']['payload'] or message['payload'].
+        Vobiz sends audio payload in message['media']['payload'] or message['payload'].
         """
         try:
             media_info = message.get("media", {})
@@ -55,15 +81,18 @@ class AudioFrameDecoder:
             else:
                 b64_payload = message.get("payload")
 
-            if not b64_payload:
+            if not b64_payload or not isinstance(b64_payload, str):
                 return None
 
-            pcm_bytes = base64.b64decode(b64_payload)
-            byte_len = len(pcm_bytes)
-            self.packet_count += 1
-            self.total_pcm_bytes += byte_len
+            raw_bytes = base64.b64decode(b64_payload.strip())
+            byte_len = len(raw_bytes)
+            if byte_len == 0:
+                return None
 
-            duration_ms = (byte_len / self.BYTES_PER_SECOND_16K_MONO) * 1000.0
+            self.packet_count += 1
+            self.total_raw_bytes += byte_len
+
+            duration_ms = (byte_len / self.bytes_per_second) * 1000.0 if self.bytes_per_second > 0 else 0.0
 
             seq = message.get("sequenceNumber") or self.packet_count
 
@@ -71,12 +100,14 @@ class AudioFrameDecoder:
                 stream_id=self.stream_id,
                 call_uuid=self.call_uuid,
                 sequence_number=int(seq),
-                raw_pcm_bytes=pcm_bytes,
+                raw_audio_bytes=raw_bytes,
                 byte_length=byte_len,
-                duration_ms=round(duration_ms, 2)
+                duration_ms=round(duration_ms, 2),
+                encoding=self.inbound_encoding,
+                sample_rate=self.inbound_sample_rate
             )
         except Exception as e:
-            logger.error(f"Error decoding Vobiz audio media frame: {e}")
+            logger.warning(f"Error decoding Vobiz audio media frame: {e}")
             return None
 
     @staticmethod
@@ -84,7 +115,7 @@ class AudioFrameDecoder:
         stream_id: str,
         pcm_bytes: bytes,
         sample_rate: int = 16000,
-        content_type: str = "audio/x-l16;rate=16000"
+        content_type: str = "audio/x-l16",
     ) -> Dict[str, Any]:
         """
         Constructs the outbound 'playAudio' event JSON sent to Vobiz
@@ -97,7 +128,7 @@ class AudioFrameDecoder:
             "media": {
                 "contentType": content_type,
                 "sampleRate": sample_rate,
-                "payload": b64_audio
+                "payload": b64_audio,
             }
         }
 
@@ -105,10 +136,21 @@ class AudioFrameDecoder:
     def build_clear_audio(stream_id: str) -> Dict[str, Any]:
         """
         Constructs the 'clearAudio' event JSON sent to Vobiz
-        to immediately interrupt outbound playback when the caller speaks.
+        to immediately interrupt outbound playback when the caller speaks (barge-in).
         """
         return {
             "event": "clearAudio",
-            "streamId": stream_id
+            "streamId": stream_id,
         }
 
+    @staticmethod
+    def build_checkpoint(stream_id: str, checkpoint_name: str) -> Dict[str, Any]:
+        """
+        Constructs the 'checkpoint' event JSON sent to Vobiz to mark the end
+        of an utterance segment for playedStream acknowledgment tracking.
+        """
+        return {
+            "event": "checkpoint",
+            "streamId": stream_id,
+            "name": checkpoint_name,
+        }

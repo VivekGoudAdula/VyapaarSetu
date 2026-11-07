@@ -747,3 +747,62 @@ Distributor Browser 1 (Owner)     Distributor Browser 2 (Staff)
 4. **Idempotency Keys:** All order creation and webhook ingestion endpoints require or compute an `idempotency_key` based on `call_sid` and event sequence to prevent double billing or duplicate orders during network retries.
 5. **PII and Voice Privacy:** Call recordings and audio transcripts represent confidential business trade data. Audio URLs must use short-lived pre-signed URLs; transcripts are encrypted at rest and accessible only to verified Organization Owners.
 
+---
+
+## 8. TELEPHONY & AUDIO STREAMING SPECIFICATION (PHASE 4 & 4.1 HARDENED)
+
+The Vobiz telephony integration layer acts as the real-time bridge between India's telecommunications PSTN network and the Vyapaar सेतु voice processing infrastructure.
+
+### 8.1 Inbound Webhook & Cryptographic Verification
+1. **Canonical HMAC-SHA256 Verification (Vobiz V3 & V2):**
+   - Inbound webhook requests (`POST /api/v1/webhooks/vobiz/inbound-call` and `/api/v1/webhooks/vobiz/call-status`) are cryptographically verified using `X-Vobiz-Signature-V3` / `X-Vobiz-Signature-V3-Nonce` or legacy `X-Vobiz-Signature-V2` / `X-Vobiz-Signature-V2-Nonce`.
+   - V3 signature construct: `Base64(HMAC_SHA256(key=authToken, data=canonicalBaseURL + "." + nonce))`.
+   - V2 signature construct: `Base64(HMAC_SHA256(key=authToken, data=canonicalBaseURL + nonce))`.
+   - Replay attack guard: Each nonce is validated for uniqueness within a 5-minute sliding TTL cache. Reused nonces fail closed with HTTP 401.
+2. **Direct-Child VobizXML Generation:**
+   - In response to an incoming call, the backend produces direct-child VobizXML:
+     ```xml
+     <Response>
+       <Stream bidirectional="true" keepCallAlive="true">wss://api.example.com/api/v1/webhooks/vobiz/stream</Stream>
+     </Response>
+     ```
+   - `<Connect>` wrappers are strictly excluded in accordance with the official Vobiz Voice API specification.
+
+### 8.2 WebSocket Streaming Protocol & Frame Parsing
+1. **Nested Start Frame Compatibility:**
+   - The stream session initializes on receipt of an official nested start frame:
+     ```json
+     {
+       "event": "start",
+       "start": {
+         "callId": "CALL_ID",
+         "streamId": "STREAM_ID",
+         "mediaFormat": {
+           "encoding": "audio/x-l16",
+           "sampleRate": 16000
+         }
+       }
+     }
+     ```
+   - The parser inspects `data["start"]` first, falling back to top-level attributes only when nested keys are omitted.
+2. **Multi-Codec Audio Decoder:**
+   - Supports dynamically negotiated `mediaFormat`:
+     - `audio/x-l16` @ 16,000 Hz: 32,000 bytes/sec (16-bit mono).
+     - `audio/x-l16` @ 8,000 Hz: 16,000 bytes/sec (16-bit mono).
+     - `audio/x-mulaw` @ 8,000 Hz: 8,000 bytes/sec (8-bit mono).
+   - Audio chunks in `media` events (`{"event": "media", "media": {"payload": "<Base64>"}}`) are decoded and duration is computed dynamically based on the negotiated sample rate and byte width.
+3. **Definitive Carrier Termination:**
+   - The WebSocket connection closing constitutes definitive carrier hangup. Stream cleanup does not depend on an optional JSON `stop` frame.
+4. **Barge-In Control Primitives:**
+   - Pre-configured control frames for Phase 5 interruption handling:
+     - Outbound checkpoint: `{"event": "checkpoint", "name": "<NAME>"}`.
+     - Outbound audio flush: `{"event": "clearAudio"}`.
+     - Inbound tracking: `playedStream` and `clearedAudio` frame handling.
+
+### 8.3 State Machine Monotonicity
+1. **Terminal State Immutability:**
+   - Call status follows a strict monotonic lifecycle: `INITIATED` -> `RINGING` -> `IN_PROGRESS` -> `COMPLETED` / `FAILED` / `BUSY` / `REJECTED` / `NO_ANSWER`.
+   - Terminal states cannot be regressed by delayed, retransmitted, or out-of-order webhook callbacks.
+   - Updates are executed with atomic MongoDB query filters: `{"call_status": {"$nin": ["COMPLETED", "FAILED", "BUSY", "REJECTED", "NO_ANSWER", "CANCELLED"]}}`.
+   - Durations are updated monotonically using `$max` so smaller out-of-order duration updates cannot shrink recorded call times.
+

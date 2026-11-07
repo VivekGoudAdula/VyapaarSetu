@@ -63,48 +63,52 @@ class VobizClient:
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                # Attempt to query account metadata or numbers
-                # Vobiz Voice API endpoints: /account or /phone-numbers
+                # Query verified Vobiz Voice API authentication verification endpoint
                 response = await client.get(
-                    f"{self.base_url}/account",
+                    f"{self.base_url}/auth/me",
                     headers=self._get_headers()
                 )
 
                 if response.status_code in (200, 201):
+                    # Never leak personal details, emails, or secret tokens in the response
                     return {
                         "status": "CONNECTED",
                         "is_connected": True,
                         "message": "Successfully authenticated with Vobiz Telephony API.",
-                        "details": response.json() if response.headers.get("content-type", "").startswith("application/json") else {"status_code": response.status_code}
+                        "details": {
+                            "status_code": response.status_code,
+                            "authenticated": True,
+                            "provider": "VOBIZ",
+                        }
                     }
                 elif response.status_code in (401, 403):
                     return {
                         "status": "UNAUTHORIZED",
                         "is_connected": False,
                         "message": "Vobiz authentication failed. Invalid Auth ID or Auth Token.",
-                        "details": {"status_code": response.status_code, "error": response.text}
+                        "details": {"status_code": response.status_code}
                     }
                 else:
                     return {
                         "status": "ERROR",
                         "is_connected": False,
                         "message": f"Vobiz API returned status {response.status_code}.",
-                        "details": {"status_code": response.status_code, "error": response.text}
+                        "details": {"status_code": response.status_code}
                     }
         except httpx.TimeoutException:
             return {
                 "status": "TIMEOUT",
                 "is_connected": False,
                 "message": "Connection to Vobiz API timed out.",
-                "details": {"timeout_seconds": self.timeout, "base_url": self.base_url}
+                "details": {"timeout_seconds": self.timeout}
             }
         except Exception as e:
-            logger.warning(f"Vobiz API connection test error: {e}")
+            logger.warning("Vobiz API connection test network error")
             return {
                 "status": "ERROR",
                 "is_connected": False,
-                "message": f"Could not reach Vobiz API: {str(e)}",
-                "details": {"error": str(e), "base_url": self.base_url}
+                "message": "Could not reach Vobiz API.",
+                "details": {"error_type": type(e).__name__}
             }
 
     async def hangup_call(self, call_uuid: str) -> bool:

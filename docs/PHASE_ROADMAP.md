@@ -120,7 +120,9 @@
 - **Dependencies:** Phase 3 complete and verified Vobiz API credentials.
 - **Boundaries:** No AI reasoning or order extraction yet (handled in Phase 5 & 6).
 - **Completion Criteria:** When a test call is dialed to the Vobiz number, the webhook triggers, identifies the organization, matches the caller ID, and logs a valid call session.
-- **Status:** **COMPLETED — VERIFIED**. All 66 automated tests passed on MongoDB Atlas (`vyapaar_setu`). VobizXML `<Stream>` response generator, HMAC-SHA256 signature verification, phone normalizations (E.164 and 10-digit Indian Kirana mobile), binary PCM 16kHz audio frame codecs, Vobiz REST client, organization phone provisioning with global uniqueness, inbound call tenant resolution & Kirana caller identification, call lifecycle state machine (`INITIATED` -> `STREAMING` -> `COMPLETED`), immutable `call_events` audit trail, and complete frontend management dashboard (`/app/telephony`) with call simulation and timeline drawer fully implemented.
+- **Status:** **COMPLETED — VERIFIED & PROTOCOL HARDENED (Phase 4.1)**.
+  - **Phase 4:** Initial telephony foundation, webhook endpoints, phone configuration, retailer caller ID resolution, and call history logging.
+  - **Phase 4.1 Protocol Hardening:** Verified against live Vobiz API (`GET /api/v1/auth/me`). Canonical URL+nonce HMAC-SHA256 signature verification (V3 & V2) with replay prevention. Direct-child `<Response><Stream bidirectional="true" keepCallAlive="true">` VobizXML. Multi-codec support (`audio/x-l16` 8/16kHz, `audio/x-mulaw` 8kHz) with dynamic byte calculation. Nested `data.start` frame parsing. Strict call lifecycle state monotonicity preventing terminal state regression. Full 35/35 protocol test suite passed.
 
 ---
 

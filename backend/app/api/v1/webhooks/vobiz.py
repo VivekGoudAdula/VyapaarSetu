@@ -48,21 +48,33 @@ async def parse_webhook_request(request: Request) -> Dict[str, Any]:
 
 
 def check_webhook_signature(request: Request, body_bytes: bytes) -> None:
-    """Verifies Vobiz webhook cryptographic signature if secret is configured."""
-    if not settings.VOBIZ_WEBHOOK_SECRET:
+    """
+    Verifies Vobiz Voice API webhook cryptographic signature.
+    Supports official V3/V2 canonical URL+nonce HMAC-SHA256 and custom webhook signatures.
+    Fails closed (HTTP 401) if verification fails when signing key is configured.
+    """
+    key = (settings.VOBIZ_AUTH_TOKEN or settings.VOBIZ_WEBHOOK_SECRET or "").strip()
+    # In development, if neither auth_token nor webhook_secret is set, bypass check
+    if not key:
         return
 
-    sig_header = (
-        request.headers.get("X-Webhook-Signature")
-        or request.headers.get("X-Vobiz-Signature")
-        or request.headers.get("x-webhook-signature")
+    # Extract target URL without query parameters
+    target_url = str(request.url).split("?")[0]
+    headers_dict = dict(request.headers)
+
+    is_valid = verify_vobiz_signature(
+        target_url=target_url,
+        headers=headers_dict,
+        auth_token=settings.VOBIZ_AUTH_TOKEN,
+        payload_bytes=body_bytes,
+        secret=settings.VOBIZ_WEBHOOK_SECRET,
     )
 
-    if not verify_vobiz_signature(body_bytes, sig_header, settings.VOBIZ_WEBHOOK_SECRET):
-        logger.warning("Rejected Vobiz webhook: Invalid or missing HMAC-SHA256 signature.")
+    if not is_valid:
+        logger.warning(f"Rejected unauthenticated Vobiz webhook from {request.client.host if request.client else 'unknown'}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Vobiz webhook signature."
+            detail="Invalid or missing Vobiz webhook cryptographic signature."
         )
 
 
@@ -132,12 +144,14 @@ async def call_status_webhook(
 async def vobiz_media_stream_websocket(websocket: WebSocket):
     """
     Bidirectional WebSocket audio streaming endpoint for Vobiz Voice API.
-    Receives raw 16kHz Linear PCM audio frames and tracks call streaming state.
+    Receives raw Linear PCM (8kHz/16kHz) or μ-law audio frames and tracks call streaming state.
     
-    In Phase 4:
-    - Verifies handshake and parses 'start', 'media', and 'stop' frames.
-    - Decodes incoming base64 PCM frames and measures byte volume and duration.
-    - Updates call streaming status and records audit events.
+    In Phase 4.1:
+    - Parses official nested 'start' frames {"event": "start", "start": {"streamId": ..., "callId": ..., "mediaFormat": ...}}
+    - Validates required streamId and callId to prevent unlinked sessions.
+    - Decodes incoming Base64 frames adhering to the negotiated mediaFormat (L16 or μ-law).
+    - Respects WebSocket close/disconnect as the definitive stream termination signal.
+    - Acknowledges 'playedStream' and 'clearedAudio' control events cleanly.
     - Speech-to-Text and LLM reasoning are deferred to Phase 5 and Phase 6.
     """
     await websocket.accept()
@@ -154,6 +168,31 @@ async def vobiz_media_stream_websocket(websocket: WebSocket):
     decoder: Optional[AudioFrameDecoder] = None
     stream_id: Optional[str] = None
     call_uuid: Optional[str] = None
+    stream_finalized: bool = False
+
+    async def finalize_stream(reason: str = "normal"):
+        nonlocal stream_finalized
+        if stream_finalized:
+            return
+        stream_finalized = True
+        if decoder and stream_id:
+            stats = {
+                "stream_id": stream_id,
+                "packet_count": decoder.packet_count,
+                "total_bytes": decoder.total_raw_bytes,
+                "duration_seconds": decoder.total_duration_seconds,
+                "encoding": decoder.inbound_encoding,
+                "sample_rate": decoder.inbound_sample_rate,
+                "termination_reason": reason,
+            }
+            try:
+                await service.handle_stream_stop(
+                    stream_id=stream_id,
+                    vobiz_call_id=call_uuid,
+                    telemetry_stats=stats
+                )
+            except Exception as e:
+                logger.error(f"Error finalizing stream {stream_id}: {e}")
 
     try:
         while True:
@@ -164,17 +203,52 @@ async def vobiz_media_stream_websocket(websocket: WebSocket):
             try:
                 data = json.loads(raw_text)
             except json.JSONDecodeError:
+                logger.warning("Received invalid non-JSON text frame on Vobiz media stream.")
                 continue
 
             event_type = data.get("event", "").lower()
 
             if event_type == "start":
-                stream_id = data.get("streamId") or data.get("stream_id") or ""
-                call_uuid = data.get("callUuid") or data.get("call_uuid") or ""
-                media_format = data.get("mediaFormat", {})
+                # Support official documented nested start object with root fallback
+                start_block = data.get("start") if isinstance(data.get("start"), dict) else {}
+                
+                stream_id = (
+                    start_block.get("streamId")
+                    or start_block.get("stream_id")
+                    or data.get("streamId")
+                    or data.get("stream_id")
+                    or ""
+                ).strip()
 
-                decoder = AudioFrameDecoder(stream_id=stream_id, call_uuid=call_uuid)
-                logger.info(f"Vobiz stream started: StreamID={stream_id}, CallUUID={call_uuid}, Format={media_format}")
+                call_uuid = (
+                    start_block.get("callId")
+                    or start_block.get("call_id")
+                    or start_block.get("callUuid")
+                    or start_block.get("call_uuid")
+                    or data.get("callId")
+                    or data.get("callUuid")
+                    or data.get("call_uuid")
+                    or ""
+                ).strip()
+
+                media_format = start_block.get("mediaFormat") or data.get("mediaFormat") or {}
+
+                # Strict identifier validation: never bind an unlinked stream
+                if not stream_id or not call_uuid:
+                    logger.warning(
+                        f"Rejected Vobiz stream start frame: Missing streamId or callId (data={data})"
+                    )
+                    continue
+
+                decoder = AudioFrameDecoder(
+                    stream_id=stream_id,
+                    call_uuid=call_uuid,
+                    media_format=media_format
+                )
+                logger.info(
+                    f"Vobiz stream initialized: StreamID={stream_id}, CallUUID={call_uuid}, "
+                    f"Encoding={decoder.inbound_encoding}, Rate={decoder.inbound_sample_rate}Hz"
+                )
 
                 await service.handle_stream_start(
                     stream_id=stream_id,
@@ -185,47 +259,29 @@ async def vobiz_media_stream_websocket(websocket: WebSocket):
             elif event_type == "media":
                 if decoder:
                     packet = decoder.decode_media_message(data)
-                    # Audio frames are received and tracked.
-                    # Speech-to-Text (Gnani Prisma) pipeline attaches here in Phase 5.
+                    # Decoded packet is tracked; STT (Gnani Prisma) pipeline attaches in Phase 5.
+
+            elif event_type in ("playedstream", "played_stream"):
+                # Acknowledgment from Vobiz for queued playback completion (Phase 5 preparation)
+                checkpoint_name = data.get("name") or data.get("checkpoint")
+                logger.debug(f"Vobiz playedStream acknowledged for stream {stream_id}, checkpoint={checkpoint_name}")
+
+            elif event_type in ("clearedaudio", "cleared_audio"):
+                # Acknowledgment from Vobiz that playback buffer was cleared on barge-in
+                logger.debug(f"Vobiz clearedAudio acknowledged for stream {stream_id}")
 
             elif event_type == "stop":
-                logger.info(f"Vobiz stream stop event received for stream {stream_id}")
-                if decoder and stream_id:
-                    stats = {
-                        "stream_id": stream_id,
-                        "packet_count": decoder.packet_count,
-                        "total_pcm_bytes": decoder.total_pcm_bytes,
-                        "duration_seconds": decoder.total_duration_seconds,
-                    }
-                    await service.handle_stream_stop(
-                        stream_id=stream_id,
-                        vobiz_call_id=call_uuid,
-                        telemetry_stats=stats
-                    )
+                logger.info(f"Vobiz stream stop event frame received for stream {stream_id}")
+                await finalize_stream(reason="vobiz_stop_event")
                 break
 
     except WebSocketDisconnect:
-        logger.info(f"Vobiz WebSocket disconnected: StreamID={stream_id}, CallUUID={call_uuid}")
-        if decoder and stream_id:
-            stats = {
-                "stream_id": stream_id,
-                "packet_count": decoder.packet_count,
-                "total_pcm_bytes": decoder.total_pcm_bytes,
-                "duration_seconds": decoder.total_duration_seconds,
-                "disconnect_reason": "WebSocketDisconnect",
-            }
-            await service.handle_stream_stop(
-                stream_id=stream_id,
-                vobiz_call_id=call_uuid,
-                telemetry_stats=stats
-            )
+        logger.info(f"Vobiz WebSocket closed by peer: StreamID={stream_id}, CallUUID={call_uuid}")
+        await finalize_stream(reason="websocket_disconnect")
     except Exception as e:
         logger.error(f"Error in Vobiz WebSocket media stream: {e}", exc_info=True)
-        if decoder and stream_id:
-            stats = {"stream_id": stream_id, "error": str(e)}
-            await service.handle_stream_stop(
-                stream_id=stream_id,
-                vobiz_call_id=call_uuid,
-                telemetry_stats=stats
-            )
+        await finalize_stream(reason=f"exception_{type(e).__name__}")
+    finally:
+        # Guarantee definitive stream termination cleanup upon socket exit
+        await finalize_stream(reason="socket_exit")
 

@@ -1,58 +1,130 @@
 """
 Vyapaar सेतु — Vobiz Webhook Verifier & Payload Parser.
-Handles HMAC-SHA256 signature verification, phone number normalizations (E.164 & 10-digit Kirana mobile),
-and payload normalization across JSON and form-urlencoded requests.
+Implements the official Vobiz Voice API V3/V2 HMAC-SHA256 signature verification protocol,
+phone number normalizations (E.164 & 10-digit Kirana mobile), and webhook payload normalization.
 """
 
 import hmac
 import hashlib
+import base64
 import re
+import time
+import logging
 from typing import Optional, Dict, Any
+
+logger = logging.getLogger("vyapaar_setu.telephony.webhooks")
+
+# In-memory recent nonce cache to guard against replay attacks (TTL: 10 minutes)
+_SEEN_NONCES: Dict[str, float] = {}
+NONCE_EXPIRY_SECONDS = 600.0
+
+
+def _is_nonce_replay(nonce: str) -> bool:
+    """Checks if a nonce was recently consumed to prevent replay attacks."""
+    now = time.time()
+    # Prune expired nonces
+    expired = [k for k, ts in _SEEN_NONCES.items() if now - ts > NONCE_EXPIRY_SECONDS]
+    for k in expired:
+        _SEEN_NONCES.pop(k, None)
+
+    if nonce in _SEEN_NONCES:
+        return True
+    _SEEN_NONCES[nonce] = now
+    return False
 
 
 def verify_vobiz_signature(
-    payload_bytes: bytes,
-    signature_header: Optional[str],
-    secret: str,
+    target_url: str,
+    headers: Dict[str, str],
+    auth_token: str,
+    payload_bytes: Optional[bytes] = None,
+    secret: Optional[str] = None,
 ) -> bool:
     """
-    Verifies the cryptographic HMAC-SHA256 signature sent by Vobiz in webhook headers.
-    Vobiz uses either X-Webhook-Signature or X-Vobiz-Signature.
+    Verifies the authenticity of incoming Vobiz Voice API webhooks.
+    
+    Supports:
+    1. Official Vobiz Voice API V3 (Recommended):
+       Header: X-Vobiz-Signature-V3 & Nonce: X-Vobiz-Signature-V3-Nonce
+       Signature = Base64(HMAC-SHA256(key=authToken, msg=baseURL + "." + nonce))
+    
+    2. Official Vobiz Voice API V2:
+       Header: X-Vobiz-Signature-V2 & Nonce: X-Vobiz-Signature-V2-Nonce
+       Signature = Base64(HMAC-SHA256(key=authToken, msg=baseURL + nonce))
+       
+    3. Custom Webhook Fallback (X-Webhook-Signature):
+       Header: X-Webhook-Signature
+       Signature = Hex(HMAC-SHA256(key=secret, msg=payload_bytes))
 
     Args:
-        payload_bytes: Raw request body bytes.
-        signature_header: Signature header value from Vobiz.
-        secret: Configured VOBIZ_WEBHOOK_SECRET.
+        target_url: The webhook callback URL without query parameters.
+        headers: Request HTTP headers mapping.
+        auth_token: The account VOBIZ_AUTH_TOKEN used as the signing key.
+        payload_bytes: Optional raw request body bytes for custom webhook format.
+        secret: Optional VOBIZ_WEBHOOK_SECRET for custom subscription verification.
 
     Returns:
-        True if valid or if secret is not configured in development mode; False if invalid.
+        True if signature is valid or if unconfigured in local development; False if invalid.
     """
-    # If no secret configured in development, bypass check
-    if not secret:
+    key = (auth_token or secret or "").strip()
+    # In development mode, if neither token nor secret is configured, allow requests through
+    if not key:
         return True
 
-    if not signature_header:
-        return False
+    # Case-insensitive header lookup
+    hdr_lower = {k.lower(): v for k, v in headers.items()}
+    clean_url = target_url.split("?")[0].rstrip("/")
 
-    # Strip optional prefix e.g. "sha256=" or "t=...,v1=..."
-    clean_sig = signature_header.strip()
-    if clean_sig.startswith("sha256="):
-        clean_sig = clean_sig.split("sha256=")[-1]
-    elif "v1=" in clean_sig:
-        # Some webhook providers use "v1=hex"
-        for part in clean_sig.split(","):
-            if part.strip().startswith("v1="):
-                clean_sig = part.strip().split("v1=")[-1]
-                break
+    # 1. Official Vobiz Voice V3 Verification
+    sig_v3 = hdr_lower.get("x-vobiz-signature-v3")
+    nonce_v3 = hdr_lower.get("x-vobiz-signature-v3-nonce")
+    if sig_v3 and nonce_v3:
+        if _is_nonce_replay(nonce_v3.strip()):
+            logger.warning(f"Rejected Vobiz V3 webhook: Replay detected for nonce {nonce_v3}")
+            return False
 
-    # Compute expected signature
-    computed_sig = hmac.new(
-        key=secret.encode("utf-8"),
-        msg=payload_bytes,
-        digestmod=hashlib.sha256
-    ).hexdigest()
+        canonical_msg = f"{clean_url}.{nonce_v3.strip()}".encode("utf-8")
+        computed = base64.b64encode(
+            hmac.new(key.encode("utf-8"), canonical_msg, hashlib.sha256).digest()
+        ).decode("utf-8")
 
-    return hmac.compare_digest(computed_sig.lower(), clean_sig.lower())
+        if hmac.compare_digest(sig_v3.strip(), computed.strip()):
+            return True
+
+    # 2. Official Vobiz Voice V2 Verification
+    sig_v2 = hdr_lower.get("x-vobiz-signature-v2")
+    nonce_v2 = hdr_lower.get("x-vobiz-signature-v2-nonce")
+    if sig_v2 and nonce_v2:
+        if _is_nonce_replay(nonce_v2.strip()):
+            logger.warning(f"Rejected Vobiz V2 webhook: Replay detected for nonce {nonce_v2}")
+            return False
+
+        canonical_msg = f"{clean_url}{nonce_v2.strip()}".encode("utf-8")
+        computed = base64.b64encode(
+            hmac.new(key.encode("utf-8"), canonical_msg, hashlib.sha256).digest()
+        ).decode("utf-8")
+
+        if hmac.compare_digest(sig_v2.strip(), computed.strip()):
+            return True
+
+    # 3. Custom Webhook / Body HMAC-SHA256 Fallback
+    sig_custom = hdr_lower.get("x-webhook-signature") or hdr_lower.get("x-vobiz-signature")
+    if sig_custom and payload_bytes:
+        clean_sig = sig_custom.strip()
+        if clean_sig.startswith("sha256="):
+            clean_sig = clean_sig[7:]
+
+        computed_hex = hmac.new(
+            key=key.encode("utf-8"),
+            msg=payload_bytes,
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
+        if hmac.compare_digest(clean_sig.lower(), computed_hex.lower()):
+            return True
+
+    logger.warning("Vobiz webhook verification failed: Signature headers missing or mismatched.")
+    return False
 
 
 def normalize_e164(phone: str) -> str:
@@ -101,7 +173,6 @@ def normalize_indian_mobile_10digit(phone: str) -> str:
 
     if len(digits) >= 10:
         candidate = digits[-10:]
-        # Standard Indian mobile numbers start with 6, 7, 8, or 9
         return candidate
     return digits
 
@@ -182,4 +253,3 @@ def parse_inbound_webhook_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
         "duration_seconds": duration_seconds,
         "raw_payload": payload,
     }
-

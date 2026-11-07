@@ -15,17 +15,22 @@ def escape_xml(text: str) -> str:
 
 def build_stream_xml(
     websocket_url: str,
-    content_type: str = "audio/x-l16;rate=16000",
     bidirectional: bool = True,
     keep_call_alive: bool = True,
 ) -> str:
     """
-    Constructs a VobizXML Response containing a <Connect><Stream> instruction.
+    Constructs an official VobizXML Response containing a direct-child <Stream> instruction.
     Directs Vobiz to open a bidirectional WebSocket audio stream to Vyapaar सेतु.
+
+    Documented official Vobiz structure:
+    <Response>
+        <Stream bidirectional="true" keepCallAlive="true">
+            wss://your-domain.example/api/v1/webhooks/vobiz/media-stream
+        </Stream>
+    </Response>
 
     Args:
         websocket_url: Absolute WebSocket URL (e.g. wss://domain.com/api/v1/webhooks/vobiz/media-stream)
-        content_type: Audio format specification (default: audio/x-l16;rate=16000)
         bidirectional: Whether audio flows both ways (True for conversational AI)
         keep_call_alive: Keep call active even during silence
 
@@ -39,11 +44,9 @@ def build_stream_xml(
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         "<Response>\n"
-        "    <Connect>\n"
-        f'        <Stream bidirectional="{bidi_attr}" keepCallAlive="{keep_alive_attr}" contentType="{content_type}">\n'
-        f"            {escaped_url}\n"
-        "        </Stream>\n"
-        "    </Connect>\n"
+        f'    <Stream bidirectional="{bidi_attr}" keepCallAlive="{keep_alive_attr}">\n'
+        f"        {escaped_url}\n"
+        "    </Stream>\n"
         "</Response>"
     )
 

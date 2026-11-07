@@ -18,6 +18,10 @@ from app.services.telephony_service import TelephonyService
 class CallService:
     """Service handling telephony call sessions, event logging, and state transitions."""
 
+    # Explicit monotonic call state categories
+    TERMINAL_CALL_STATES = frozenset({"COMPLETED", "FAILED", "BUSY", "REJECTED", "NO_ANSWER", "CANCELLED"})
+    ACTIVE_CALL_STATES = frozenset({"INITIATED", "RINGING", "IN_PROGRESS", "STREAMING"})
+
     def __init__(self, db: AsyncDatabase):
         self.db = db
         self.telephony_service = TelephonyService(db)
@@ -195,7 +199,8 @@ class CallService:
     async def handle_call_status_update(self, raw_payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Handles post-call lifecycle webhook (e.g. CallStatus = completed, hangup, failed).
-        Updates call duration, status, and appends a lifecycle event.
+        Enforces state machine monotonicity: terminal states (COMPLETED, FAILED, BUSY, etc.)
+        cannot be regressed to active states by delayed or out-of-order callbacks.
         """
         parsed = parse_inbound_webhook_payload(raw_payload)
         vobiz_call_id = parsed["vobiz_call_id"]
@@ -214,6 +219,32 @@ class CallService:
         org_id = str(call["organization_id"])
         prev_status = call.get("call_status", "INITIATED")
 
+        # Monotonicity check: Prevent terminal state regression from out-of-order webhooks
+        if prev_status in self.TERMINAL_CALL_STATES:
+            # Call is already terminal. Update duration or hangup cause if provided, but never regress state
+            now = datetime.now(timezone.utc).isoformat()
+            patch_fields: Dict[str, Any] = {"updated_at": now}
+            if duration > 0:
+                patch_fields["duration_seconds"] = max(duration, int(call.get("duration_seconds", 0)))
+            if hangup_cause and not call.get("hangup_cause"):
+                patch_fields["hangup_cause"] = hangup_cause
+
+            await self.db.calls.update_one(
+                {"_id": call["_id"]},
+                {"$set": patch_fields}
+            )
+            # Do not emit duplicate or regressive transition events
+            return await self.db.calls.find_one({"_id": call["_id"]})
+
+        # Idempotency check: if status has not changed, update duration without redundant event
+        if status == prev_status:
+            if duration > 0:
+                await self.db.calls.update_one(
+                    {"_id": call["_id"]},
+                    {"$set": {"duration_seconds": max(duration, int(call.get("duration_seconds", 0)))}}
+                )
+            return call
+
         now = datetime.now(timezone.utc).isoformat()
         update_fields: Dict[str, Any] = {
             "call_status": status,
@@ -223,14 +254,22 @@ class CallService:
             update_fields["duration_seconds"] = max(duration, int(call.get("duration_seconds", 0)))
         if hangup_cause:
             update_fields["hangup_cause"] = hangup_cause
-        if status in ("COMPLETED", "FAILED", "REJECTED", "BUSY", "NO_ANSWER", "CANCELLED"):
+
+        is_now_terminal = status in self.TERMINAL_CALL_STATES
+        if is_now_terminal:
             if not call.get("ended_at"):
                 update_fields["ended_at"] = now
             if call.get("stream_status") == "STREAMING":
                 update_fields["stream_status"] = "DISCONNECTED"
 
+        # Atomic conditional update preventing concurrent race conditions
+        filter_query = {"_id": call["_id"]}
+        if not is_now_terminal:
+            # Active state updates can only apply if the document has not become terminal
+            filter_query["call_status"] = {"$nin": list(self.TERMINAL_CALL_STATES)}
+
         await self.db.calls.update_one(
-            {"_id": call["_id"]},
+            filter_query,
             {"$set": update_fields}
         )
 
@@ -244,6 +283,7 @@ class CallService:
             safe_metadata={
                 "duration_seconds": duration,
                 "hangup_cause": hangup_cause,
+                "terminal_transition": is_now_terminal,
             }
         )
 
@@ -255,7 +295,10 @@ class CallService:
         vobiz_call_id: str,
         media_format: Dict[str, Any]
     ) -> None:
-        """Invoked when Vobiz WebSocket audio stream is successfully established."""
+        """
+        Invoked when Vobiz WebSocket audio stream is successfully established.
+        Guards against overwriting terminal call status if stream connects late.
+        """
         if not vobiz_call_id:
             return
 
@@ -267,8 +310,13 @@ class CallService:
         org_id = str(call["organization_id"])
 
         now = datetime.now(timezone.utc).isoformat()
+
+        # Atomic conditional update: only update call_status to IN_PROGRESS if not already terminal
         await self.db.calls.update_one(
-            {"_id": call["_id"]},
+            {
+                "_id": call["_id"],
+                "call_status": {"$nin": list(self.TERMINAL_CALL_STATES)}
+            },
             {
                 "$set": {
                     "stream_status": "STREAMING",
@@ -277,6 +325,12 @@ class CallService:
                     "updated_at": now,
                 }
             }
+        )
+
+        # Always update stream_id and stream_status if call still active
+        await self.db.calls.update_one(
+            {"_id": call["_id"], "stream_status": "PENDING"},
+            {"$set": {"stream_status": "STREAMING", "stream_id": stream_id, "updated_at": now}}
         )
 
         await self.log_call_event(
