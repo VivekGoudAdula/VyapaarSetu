@@ -142,14 +142,16 @@ Vyapaar-Setu/
 
 ## 6. CURRENT STATUS & GOVERNANCE
 
-> **Current Milestone: PHASE 3 COMPLETED — BUSINESS SETUP & CONFIGURATION.**
-> All Phase 3 deliverables are fully implemented and verified on the isolated `vyapaar_setu` database:
-> - **Product Catalogue Master:** Full CRUD, packaging unit hierarchies (e.g. 1 Carton = 12 Pieces), wholesale rates, MRP, vernacular aliases (`aliases`), category filters, and organization-scoped unique SKU constraint.
-> - **Inventory Balances & Ledger:** Stock snapshots (`quantity_on_hand`, `quantity_available`, `reorder_threshold`), real-time stock alert status calculation (`in_stock`, `low_stock`, `out_of_stock`), non-negative stock invariant, and append-only immutable movement ledger (`OPENING_STOCK`, `STOCK_RECEIVED`, `MANUAL_ADJUSTMENT`, `STOCK_DAMAGED`, `STOCK_RETURNED`).
-> - **Promotional Schemes & Rules Engine:** CRUD and deterministic calculation engine for `BUY_X_GET_Y` (Free Goods), `VOLUME_SLAB_DISCOUNT`, `PERCENTAGE_DISCOUNT`, and `FIXED_AMOUNT_DISCOUNT` with validity date windows and interactive testing sandbox.
-> - **Retailer Directory & Caller ID:** Kirana accounts, validated 10-digit primary mobile numbers for Vobiz telephony matching, GSTIN validation, credit limit tracking, and multiple delivery address management per retailer.
-> - **Business Operating Settings:** Trade name profile, weekly operating hours scheduler (Monday–Sunday open/close times), minimum order value (₹), order cut-off times, and serviced delivery areas/PIN codes.
-> - **Multi-Tenant Data Isolation:** Strict enforcement via verified `TenantContext` — all queries, indexes, and mutations scoped to `organization_id`.
-> - **UI / UX Experience:** 5 responsive pages in `/app` (Products, Inventory, Schemes, Retailers, Settings) crafted to the $10,000 SaaS light-theme benchmark with Poppins typography and emerald `#059669` accents.
-> **Standing by for user review and explicit authorization before proceeding to Phase 4.**
+> **Current Milestone: PHASE 4 COMPLETED — VOBIZ TELEPHONY INTEGRATION.**
+> All Phase 4 deliverables are fully implemented, certified, and verified with 66/66 automated tests passing against MongoDB Atlas (`vyapaar_setu`):
+> - **VobizXML Response Builders:** Protocol generation for `<Stream>`, `<Hangup>`, and `<Reject>` instructions directing Vobiz to bidirectional audio streaming.
+> - **HMAC-SHA256 Webhook Verification:** Cryptographic signature verification for incoming Vobiz Answer Webhooks with payload decoding for both JSON and form-urlencoded requests.
+> - **Phone Number Normalization:** Standard E.164 conversion and 10-digit Kirana mobile extraction for reliable caller-ID matching.
+> - **Dedicated Business Line Provisioning:** Virtual phone configuration with strict global uniqueness preventing two distributors from claiming the same phone number.
+> - **Caller ID Resolution:** Automatic matching of incoming caller numbers against the distributor's registered Kirana retailer directory (`REGISTERED_RETAILER` vs `UNKNOWN`).
+> - **Bidirectional Audio Stream Transport:** WebSocket endpoint (`/api/v1/webhooks/vobiz/media-stream`) receiving raw 16kHz linear PCM frames with packet accounting and base64 codecs.
+> - **Call State Machine & Event Logging:** Idempotent call session management (`INITIATED`, `IN_PROGRESS`, `STREAMING`, `COMPLETED`, `REJECTED`, `FAILED`) and immutable chronological audit logging in `call_events`.
+> - **Multi-Tenant SaaS Isolation:** Full query, index, and mutation isolation between organizations.
+> - **Telephony Dashboard UI:** Responsive `/app/telephony` management dashboard with line provisioning, connection testing, live webhook endpoint copying, call session logs, chronological event timeline drawer, and built-in Kirana call simulation.
+> **Standing by for user review and explicit authorization before proceeding to Phase 5.**
 

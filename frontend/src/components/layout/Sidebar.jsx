@@ -73,16 +73,16 @@ const NAVIGATION_GROUPS = [
     title: 'VOICE COMMERCE',
     items: [
       {
+        name: 'Telephony & Lines',
+        path: '/app/telephony',
+        icon: PhoneCall,
+        isImplemented: true,
+      },
+      {
         name: 'Voice Agent (Vobiz)',
         icon: Mic,
         isImplemented: false,
-        phase: 'Phase 4 & 5',
-      },
-      {
-        name: 'Call History & Audio',
-        icon: PhoneCall,
-        isImplemented: false,
-        phase: 'Phase 4',
+        phase: 'Phase 5 & 6',
       },
     ],
   },

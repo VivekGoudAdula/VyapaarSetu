@@ -11,6 +11,7 @@ import { InventoryPage } from '@/pages/InventoryPage';
 import { SchemesPage } from '@/pages/SchemesPage';
 import { RetailersPage } from '@/pages/RetailersPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { TelephonyPage } from '@/pages/TelephonyPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
@@ -90,6 +91,10 @@ export const router = createBrowserRouter([
           {
             path: 'settings',
             element: <SettingsPage />,
+          },
+          {
+            path: 'telephony',
+            element: <TelephonyPage />,
           },
           {
             path: '*',

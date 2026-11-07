@@ -77,13 +77,63 @@ class Settings(BaseSettings):
         description="Rate limiting window in seconds"
     )
 
+    # Vobiz Telephony Configuration (Phase 4)
+    VOBIZ_API_BASE_URL: str = Field(
+        default="https://api.vobiz.ai/api/v1",
+        description="Vobiz Voice REST API base URL"
+    )
+    VOBIZ_AUTH_ID: str = Field(
+        default="",
+        description="Vobiz API Account Auth ID (e.g. MA_...)"
+    )
+    VOBIZ_AUTH_TOKEN: str = Field(
+        default="",
+        description="Vobiz API Account Auth Token"
+    )
+    VOBIZ_WEBHOOK_SECRET: str = Field(
+        default="",
+        description="Optional shared secret for cryptographic HMAC-SHA256 webhook signature verification"
+    )
+    VOBIZ_PHONE_NUMBER: str = Field(
+        default="",
+        description="Default Vobiz assigned virtual phone number (E.164 format)"
+    )
+    PUBLIC_BASE_URL: str = Field(
+        default="http://localhost:8000",
+        description="Publicly reachable HTTPS URL (e.g. ngrok tunnel) for Vobiz webhooks"
+    )
+    PUBLIC_WEBSOCKET_URL: str = Field(
+        default="",
+        description="Publicly reachable WSS URL for bidirectional audio streaming"
+    )
+
+    @property
+    def websocket_stream_url(self) -> str:
+        """Returns the public WSS endpoint URL for Vobiz media streaming."""
+        if self.PUBLIC_WEBSOCKET_URL:
+            return self.PUBLIC_WEBSOCKET_URL
+        base = self.PUBLIC_BASE_URL.rstrip("/")
+        if base.startswith("https://"):
+            ws_base = "wss://" + base[8:]
+        elif base.startswith("http://"):
+            ws_base = "ws://" + base[7:]
+        else:
+            ws_base = f"wss://{base}"
+        return f"{ws_base}{self.API_V1_PREFIX}/webhooks/vobiz/media-stream"
+
+    @property
+    def inbound_webhook_url(self) -> str:
+        """Returns the public HTTPS endpoint URL for Vobiz Answer Webhook."""
+        base = self.PUBLIC_BASE_URL.rstrip("/")
+        return f"{base}{self.API_V1_PREFIX}/webhooks/vobiz/inbound-call"
+
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse comma-separated CORS origins into a clean string list."""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

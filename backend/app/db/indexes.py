@@ -138,6 +138,56 @@ async def create_all_indexes(db: AsyncDatabase) -> None:
             name="idx_retailers_org_store_name"
         )
 
+        # Phase 4 Telephony & Call Events Indexes
+        logger.info("Initializing database indexes for collection: phone_configs")
+        await db.phone_configs.create_index(
+            [("organization_id", ASCENDING)],
+            unique=True,
+            name="uq_phone_configs_org"
+        )
+        await db.phone_configs.create_index(
+            [("phone_number", ASCENDING)],
+            unique=True,
+            name="uq_phone_configs_number"
+        )
+        await db.phone_configs.create_index(
+            [("phone_number", ASCENDING), ("is_active", ASCENDING)],
+            name="idx_phone_configs_number_active"
+        )
+
+        logger.info("Initializing database indexes for collection: calls")
+        await db.calls.create_index(
+            [("vobiz_call_id", ASCENDING)],
+            unique=True,
+            name="uq_calls_vobiz_id"
+        )
+        await db.calls.create_index(
+            [("organization_id", ASCENDING), ("created_at", DESCENDING)],
+            name="idx_calls_org_created_at"
+        )
+        await db.calls.create_index(
+            [("organization_id", ASCENDING), ("call_status", ASCENDING)],
+            name="idx_calls_org_status"
+        )
+        await db.calls.create_index(
+            [("organization_id", ASCENDING), ("retailer_id", ASCENDING)],
+            name="idx_calls_org_retailer"
+        )
+        await db.calls.create_index(
+            [("organization_id", ASCENDING), ("normalized_from_number", ASCENDING)],
+            name="idx_calls_org_caller_number"
+        )
+
+        logger.info("Initializing database indexes for collection: call_events")
+        await db.call_events.create_index(
+            [("organization_id", ASCENDING), ("call_id", ASCENDING), ("event_timestamp", ASCENDING)],
+            name="idx_call_events_org_call_time"
+        )
+        await db.call_events.create_index(
+            [("vobiz_call_id", ASCENDING), ("event_timestamp", ASCENDING)],
+            name="idx_call_events_vobiz_time"
+        )
+
         logger.info("All Vyapaar सेतु database indexes verified successfully.")
     except Exception as e:
         logger.error(f"Failed to create database indexes: {e}")
