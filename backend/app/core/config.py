@@ -37,6 +37,46 @@ class Settings(BaseSettings):
         description="Comma-separated allowed origins for CORS"
     )
 
+    # JWT Authentication & Cookie Security Settings
+    JWT_SECRET_KEY: str = Field(
+        default="vyapaar_setu_dev_secret_key_change_in_production_min_32_bytes_long!!",
+        description="Cryptographic secret key for signing JWT tokens"
+    )
+    JWT_ALGORITHM: str = Field(
+        default="HS256",
+        description="JWT cryptographic algorithm"
+    )
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=15,
+        description="Access token lifespan in minutes"
+    )
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
+        default=7,
+        description="Refresh token lifespan in days"
+    )
+    COOKIE_SECURE: bool = Field(
+        default=False,
+        description="Set to True in production to require HTTPS for auth cookies"
+    )
+    COOKIE_SAMESITE: str = Field(
+        default="lax",
+        description="SameSite cookie policy ('lax', 'strict', or 'none')"
+    )
+    COOKIE_NAME: str = Field(
+        default="vyapaar_refresh_token",
+        description="HttpOnly cookie name for refresh token storage"
+    )
+
+    # Login Rate Limiting (Brute Force Protection)
+    RATE_LIMIT_LOGIN_MAX_ATTEMPTS: int = Field(
+        default=5,
+        description="Maximum failed login attempts within window"
+    )
+    RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = Field(
+        default=60,
+        description="Rate limiting window in seconds"
+    )
+
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse comma-separated CORS origins into a clean string list."""

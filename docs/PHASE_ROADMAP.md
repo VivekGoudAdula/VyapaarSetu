@@ -79,15 +79,17 @@
 - **Objective:** Implement secure user authentication, organization registration, role-based access control, and backend tenant isolation.
 - **Scope & Deliverables:**
   - User registration and login endpoints with Argon2id password hashing.
-  - JWT token generation, refresh tokens, and authentication dependency in FastAPI.
+  - JWT token generation (short-lived access tokens in memory), refresh tokens with rotation and replay attack detection via HttpOnly cookies.
   - Organization provisioning workflow (`ORGANIZATION_OWNER` creation).
-  - Tenant context extraction middleware (injecting `organization_id` into all requests).
-  - RBAC verification (Owner vs Staff permissions).
-  - Frontend authentication views: Sign Up, Sign In, Org Onboarding wizard.
-  - Protected route wrapper in React Router.
-- **Dependencies:** Phase 1 complete.
+  - Strict Tenant Context extraction dependency (`TenantContext`) enforcing server-derived `organization_id`.
+  - RBAC verification (`ORGANIZATION_OWNER` vs `ORGANIZATION_STAFF`).
+  - Frontend authentication views: Sign Up (`/register`), Sign In (`/login`), and responsive onboarding.
+  - Protected route wrapper (`ProtectedRoute`) and public guard (`PublicOnlyRoute`) in React Router.
+  - Rate limiting for brute-force login attack mitigation.
+- **Dependencies:** Phase 1 and Phase 1.5 complete.
 - **Boundaries:** No catalog management or voice integration.
 - **Completion Criteria:** New user can register, create an organization, log in, receive a secure JWT, and access the protected dashboard shell with verified tenant isolation.
+- **Status:** **COMPLETED — VERIFIED**. All 12 integration checks passed on isolated `vyapaar_setu` database.
 
 ---
 

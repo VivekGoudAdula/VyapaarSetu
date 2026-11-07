@@ -5,7 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.mongodb import mongo_manager
+from app.db.indexes import create_all_indexes
 from app.api.health import router as health_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.organizations import router as organizations_router
 
 # Configure logging
 logging.basicConfig(
@@ -19,7 +22,7 @@ logger = logging.getLogger("vyapaar_setu.api")
 async def lifespan(app: FastAPI):
     """
     FastAPI lifespan context manager.
-    Handles startup (DB connection initialization) and graceful shutdown.
+    Handles startup (DB connection initialization, index verification) and graceful shutdown.
     Non-blocking initial ping ensures sub-second startup even if DB is offline.
     """
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION} ({settings.APP_ENV})")
@@ -27,12 +30,14 @@ async def lifespan(app: FastAPI):
     # 1. Initialize MongoDB client pool
     mongo_manager.connect()
 
-    # 2. Check initial database connectivity asynchronously without blocking startup
+    # 2. Check initial database connectivity asynchronously and create indexes
     async def initial_db_check():
         try:
             is_connected, error = await mongo_manager.ping()
-            if is_connected:
-                logger.info(f"MongoDB cluster '{mongo_manager.db_name}' connected successfully.")
+            if is_connected and mongo_manager.db is not None:
+                logger.info(f"MongoDB cluster database '{mongo_manager.db_name}' connected successfully.")
+                # Safe and idempotent index creation on isolated vyapaar_setu database
+                await create_all_indexes(mongo_manager.db)
             else:
                 logger.warning(f"MongoDB not reachable at startup: {error}. Running in degraded state.")
         except Exception as e:
@@ -59,7 +64,7 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Configure CORS for local Vite development server
+    # Configure CORS with credentials support for Vite local origin
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
@@ -68,9 +73,11 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Include Health & Telemetry Routes
+    # Include Version 1 Routers
     app.include_router(health_router)
     app.include_router(health_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(organizations_router, prefix=settings.API_V1_PREFIX)
 
     @app.get("/", tags=["Root"])
     async def root():

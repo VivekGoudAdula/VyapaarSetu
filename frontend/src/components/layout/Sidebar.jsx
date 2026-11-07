@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -102,6 +103,7 @@ const NAVIGATION_GROUPS = [
  * Features collapsible desktop state, mobile drawer, and refined roadmap presentation.
  */
 export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
+  const { organization } = useAuth();
   return (
     <>
       {/* Mobile Drawer Backdrop */}
@@ -268,11 +270,11 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-slate-900 truncate">
-                  Wholesale Hub
+                  {organization?.name || 'Wholesale Hub'}
                 </p>
                 <p className="text-[10px] text-emerald-600 font-medium truncate flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Atlas Connected
+                  {organization?.role === 'ORGANIZATION_OWNER' ? 'Owner Active' : 'Staff Active'}
                 </p>
               </div>
             )}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 import {
   PhoneCall,
   Bot,
@@ -61,9 +62,9 @@ const ONBOARDING_ROADMAP = [
   {
     number: '01',
     title: 'Create Your Business Profile',
-    desc: 'Register your distributor organization, Mandi trade name, GSTIN details, and staff member roles.',
+    desc: 'Register your distributor organization, Mandi trade name, business type, and staff member roles.',
     phase: 'Phase 2',
-    status: 'Upcoming Milestone',
+    status: 'Completed',
     icon: Building2,
   },
   {
@@ -94,9 +95,11 @@ const ONBOARDING_ROADMAP = [
 
 /**
  * Redesigned Enterprise Overview Page for Vyapaar सेतु.
- * Strictly light-mode, spacious, communicative, and aligned with Indian wholesale trade reality.
+ * Strictly light-mode, spacious, communicative, and personalized to the authenticated distributor organization.
  */
 export function OverviewPage() {
+  const { user, organization } = useAuth();
+
   return (
     <div className="space-y-10 pb-12">
       {/* 1. Welcome Hero Section (Pure Light Theme, Warm Elevation) */}
@@ -107,26 +110,29 @@ export function OverviewPage() {
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="success" size="sm" showDot>
-              Phase 1 Foundation Active
+              {organization?.name || 'Wholesale Organization'}
             </Badge>
             <span className="text-slate-300">•</span>
+            <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+              {organization?.role || 'ORGANIZATION_OWNER'}
+            </span>
+            <span className="text-slate-300">•</span>
             <span className="text-xs font-medium text-slate-500 font-mono">
-              MongoDB Atlas Live
+              Atlas Isolated: vyapaar_setu
             </span>
           </div>
 
           <div className="space-y-2">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
-              Welcome to <span className="text-slate-900">Vyapaar</span>{' '}
-              <span className="text-emerald-600 font-semibold">सेतु</span>
+              Welcome, <span className="text-emerald-700">{user?.name || 'Distributor'}</span>!
             </h2>
             <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed">
-              Turn everyday phone conversations into organised wholesale orders.
+              Managing <span className="text-slate-900 font-semibold">{organization?.name}</span> ({organization?.business_type || 'FMCG Mandi'}).
             </p>
           </div>
 
           <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-2xl">
-            Vyapaar सेतु gives wholesale distributors and FMCG super-stockists a dedicated, always-on AI sales employee. Retailers call your business number, ask about rates and stock in Hindi, Telugu, or English, and place confirmed orders directly into your fulfillment queue.
+            Vyapaar सेतु gives your wholesale business a dedicated, always-on AI sales employee. Retailers call your dedicated number, ask about rates and stock in Hindi, Telugu, or English, and place confirmed orders directly into your fulfillment queue.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -137,7 +143,7 @@ export function OverviewPage() {
 
             <div className="inline-flex items-center gap-1.5 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Multi-tenant SaaS Architecture</span>
+              <span>Multi-tenant SaaS Architecture Verified</span>
             </div>
           </div>
         </div>

@@ -30,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { AuthNoticeModal } from '@/components/landing/AuthNoticeModal';
 
 /**
  * Public Marketing Landing Page for Vyapaar सेतु.
@@ -44,7 +43,6 @@ import { AuthNoticeModal } from '@/components/landing/AuthNoticeModal';
 export function LandingPage() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const scrollToSection = (id) => {
     setMobileMenuOpen(false);
@@ -56,12 +54,6 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col">
-      {/* Auth Notice Modal */}
-      <AuthNoticeModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
-
       {/* =========================================================================
           1. NAVIGATION BAR
          ========================================================================= */}
@@ -126,7 +118,7 @@ export function LandingPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setAuthModalOpen(true)}
+              onClick={() => navigate('/login')}
               className="text-slate-600 hover:text-slate-900"
             >
               Sign In
@@ -134,7 +126,7 @@ export function LandingPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => navigate('/app')}
+              onClick={() => navigate('/register')}
               className="shadow-subtle"
             >
               <span>Get Started</span>
@@ -193,7 +185,7 @@ export function LandingPage() {
                 className="w-full justify-center"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  setAuthModalOpen(true);
+                  navigate('/login');
                 }}
               >
                 Sign In
@@ -203,7 +195,7 @@ export function LandingPage() {
                 className="w-full justify-center"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  navigate('/app');
+                  navigate('/register');
                 }}
               >
                 Get Started
@@ -250,7 +242,7 @@ export function LandingPage() {
               <Button
                 variant="primary"
                 size="lg"
-                onClick={() => navigate('/app')}
+                onClick={() => navigate('/register')}
                 className="w-full sm:w-auto shadow-subtle px-8 text-base h-12"
               >
                 <span>Get Started</span>
@@ -807,7 +799,7 @@ export function LandingPage() {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => navigate('/app')}
+              onClick={() => navigate('/register')}
               className="w-full sm:w-auto shadow-subtle px-8 text-base h-12"
             >
               <span>Get Started</span>
@@ -816,7 +808,7 @@ export function LandingPage() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setAuthModalOpen(true)}
+              onClick={() => navigate('/login')}
               className="w-full sm:w-auto text-base h-12 px-6"
             >
               <span>Distributor Sign In</span>
