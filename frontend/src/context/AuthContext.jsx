@@ -1,7 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiRequest, setAccessToken } from '@/services/api';
 
-const AuthContext = createContext(null);
+const defaultAuthValue = {
+  user: null,
+  organization: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isLoading: true,
+  register: async () => {},
+  login: async () => {},
+  logout: async () => {},
+  checkAuth: async () => {},
+};
+
+const AuthContext = createContext(defaultAuthValue);
 
 /**
  * Authentication and Multi-Tenant Context Provider.
@@ -121,9 +133,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return context || defaultAuthValue;
 }
 
