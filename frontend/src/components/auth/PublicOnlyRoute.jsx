@@ -23,3 +23,4 @@ export function PublicOnlyRoute({ children }) {
 
   return children ? children : <Outlet />;
 }
+

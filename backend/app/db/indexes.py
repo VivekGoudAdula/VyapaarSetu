@@ -71,3 +71,4 @@ async def create_all_indexes(db: AsyncDatabase) -> None:
     except Exception as e:
         logger.error(f"Failed to create database indexes: {e}")
         # Non-fatal during transient startup, logged for diagnostics
+

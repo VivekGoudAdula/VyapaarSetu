@@ -110,3 +110,4 @@ def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
     if not re.search(r"\d", password):
         return False, "Password must contain at least one number."
     return True, None
+

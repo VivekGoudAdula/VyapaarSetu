@@ -495,3 +495,4 @@ async def get_current_user_profile(
             "created_at": org["created_at"].isoformat()
         }
     }
+

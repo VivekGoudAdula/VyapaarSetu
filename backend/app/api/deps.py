@@ -155,3 +155,4 @@ def require_role(allowed_roles: List[str]):
 # Predefined RBAC dependencies
 require_owner = require_role(["ORGANIZATION_OWNER"])
 require_staff_or_owner = require_role(["ORGANIZATION_OWNER", "ORGANIZATION_STAFF"])
+

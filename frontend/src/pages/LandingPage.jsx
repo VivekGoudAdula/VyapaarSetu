@@ -218,18 +218,50 @@ export function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto space-y-6">
-            {/* Tagline Badge */}
+            {/* Tagline Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-xs font-semibold text-emerald-800 shadow-subtle">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Baatcheet se business tak.</span>
+              <span>AI Voice Commerce for Indian Wholesale</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
-              Every business call.{' '}
-              <span className="text-emerald-600 block sm:inline">
-                A smarter way to sell.
-              </span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.25] pb-2">
+              <span className="relative inline-block text-emerald-600 font-black">
+                <span>Baatcheet</span>
+                <svg
+                  className="absolute -bottom-1.5 sm:-bottom-2 left-0 w-full h-2.5 sm:h-3 text-emerald-500 overflow-visible"
+                  viewBox="0 0 100 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M2 9C28 2 74 2 98 8"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>{' '}
+              <span className="text-slate-900 font-extrabold">se</span>{' '}
+              <span className="relative inline-block text-emerald-600 font-black">
+                <span>business</span>
+                <svg
+                  className="absolute -bottom-1.5 sm:-bottom-2 left-0 w-full h-2.5 sm:h-3 text-emerald-500 overflow-visible"
+                  viewBox="0 0 100 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M2 9C28 2 74 2 98 8"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>{' '}
+              <span className="text-slate-900 font-extrabold">tak.</span>
             </h1>
 
             {/* Supporting Copy */}

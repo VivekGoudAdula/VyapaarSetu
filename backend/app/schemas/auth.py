@@ -80,3 +80,4 @@ class TokenRefreshResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
     organization: OrganizationResponse
+

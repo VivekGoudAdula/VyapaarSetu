@@ -40,3 +40,4 @@ class LoginRateLimiter:
 
 # Singleton instance for login endpoint protection
 login_limiter = LoginRateLimiter()
+
