@@ -124,7 +124,8 @@ class RetailerService:
             {"$match": {"organization_id": org_id, "is_active": True}},
             {"$group": {"_id": None, "total": {"$sum": "$credit_limit"}}}
         ]
-        credit_agg = await self.db.retailers.aggregate(total_credit_pipeline).to_list(length=1)
+        agg_cursor = await self.db.retailers.aggregate(total_credit_pipeline)
+        credit_agg = await agg_cursor.to_list(length=1)
         total_credit = credit_agg[0]["total"] if credit_agg else 0.0
 
         items: List[RetailerResponse] = []

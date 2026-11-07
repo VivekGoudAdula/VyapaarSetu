@@ -278,6 +278,12 @@ async def run_verification():
         print(f"  Caller ID Phone: +91 {ret_obj.primary_phone} | Credit Limit: ₹{ret_obj.credit_limit:,.2f}")
         print(f"  Delivery Locations: {len(ret_obj.delivery_addresses)} addresses on file")
 
+        # Verify list_retailers and aggregation
+        ret_list = await retailer_svc.list_retailers(org_a_id)
+        assert ret_list.total == 1
+        assert ret_list.total_credit_allocated == 50000.00
+        print(f"✓ Listed retailers in Org A: {ret_list.total} account(s), Total Credit: ₹{ret_list.total_credit_allocated:,.2f}")
+
         # Duplicate Phone in same org should fail
         try:
             await retailer_svc.create_retailer(org_a_id, ret_create)
